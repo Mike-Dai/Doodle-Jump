@@ -1,0 +1,55 @@
+函数声明
+
+void Menu();//菜单
+Void ShowScore();//显示分数
+
+卢冠昀：
+void ShowRule();//游戏规则
+void UpdateWithInput();
+void ChangeDir();//改变方向
+待定：void Shoot();//发射
+bool isOnBoard();//判断是否落到跳板上
+bool isDrop();//判断是否坠落
+bool isSpring();//判断是否踩到弹簧
+。。。。
+Void LoadInfo();//读入分数
+Void SaveInfo();//保存分数
+
+戴佶
+void Startup();//初始化
+void ShowPlayer();//显示玩家
+void ShowBoard();//显示跳板
+void UpdateWithoutInput();
+void MovePlayer();//移动玩家
+void MoveDown;//整体下移
+Void GameOver();//游戏结束
+
+全局变量
+float position_x, position_y; //玩家横纵坐标
+float velocity_x, velocity_y; //水平速度，垂直速度
+IMAGE background;//背景图片
+IMAGE player_left, player_right;//玩家朝左图片，玩家朝右图片
+IMAGE left_cover, right_cover;//朝左遮罩图，朝右遮罩图
+IMAGE normal_board;//普通跳板
+IMAGE normal_cover;//普通跳板遮罩图
+struct Node{
+float x,y;
+int type;
+}board[100];//跳板
+
+常量
+const int player_width = 100;//玩家高度
+const int player_height = 100;//玩家宽度
+const int board_width = 100;//跳板高度
+const int board_height = 50;//跳板宽度
+const int sleeptime = 50;//每次更新间隔时间
+const int board_number = 30;//跳板数量
+
+宏定义
+WIDTH//宽度
+HEIGHT//高度
+G//重力加速度
+V//初速度
+
+文件
+HighScore.txt
