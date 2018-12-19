@@ -19,8 +19,10 @@ Void SaveInfo();//保存分数
 void Startup();//初始化
 void ShowPlayer();//显示玩家
 void ShowBoard();//显示跳板
+void PutNewBoard();//生成新跳板
 void UpdateWithoutInput();
 void MovePlayer();//移动玩家
+void MoveBoard();//移动跳板
 void MoveDown;//整体下移
 Void GameOver();//游戏结束
 
