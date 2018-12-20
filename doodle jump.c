@@ -44,6 +44,7 @@ void MoveBoard();
 void MoveDown();
 bool isOnBoard();
 void PutNewBoard();
+void GameOver();
 
 int main()
 {
@@ -99,7 +100,6 @@ void Startup()
 void ShowPlayer()
 {
 	putimage(position_x, position_y, &player_left);
-	
 }
 
 //移动玩家
@@ -110,6 +110,14 @@ void MovePlayer()
 	if (position_y >= HEIGHT - player_height * 0.9)//玩家的脚底不位于图片最底部
 	{
 		velocity_y = V;
+	}
+	if (position_x < 0 - player_width)
+	{
+		position_x = WIDTH;//如果玩家跳出左边界，就从右边界出现
+	}
+	else if (position_x > WIDTH)
+	{
+		position_x = 0;//如果玩家跳出右边界，就从左边界出现
 	}
 	//更新玩家的速度和位置
 	velocity_y = velocity_y + G;//v = v0 + gt
@@ -205,4 +213,14 @@ void MoveDown()
 	}
 }
 
-
+void GameOver()
+{
+	int cnt = 0; //计时器
+	//玩家下坠动画
+	while (cnt < 60)
+	{
+		velocity_y += G;
+		Sleep(sleeptime);
+		cnt++;
+	}
+}
