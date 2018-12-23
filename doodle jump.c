@@ -6,6 +6,7 @@
 #include <conio.h>
 #include <time.h>
 #include <stdio.h>
+#include <math.h>
 
 //∫Í∂®“Â
 #define WIDTH 480
@@ -51,8 +52,10 @@ void MoveDown();
 bool isOnBoard();
 void PutNewBoard();
 bool isOnBoard();
+bool isDrop();
 void ChangeDir();
 void GameOver();
+void ShowRule();
 
 int main()
 {
@@ -62,7 +65,9 @@ int main()
 	ShowBoard();
 	while (1)
 	{
-		/*UpdateWithInput();
+
+		/*if(_kbhit())
+			UpdateWithInput();
 		UpdateWithoutInput();
 		*/
 		ChangeDir();
@@ -250,13 +255,26 @@ void MoveDown()
 
 bool isOnBoard()
 {
-	//TODO
+	for (int i = 0; i < board_number; i++)
+	{
+		if (position_y - board[i].y >= 0 && fabs(position_x - board[i].x) < 5*10e-1)
+			return true;
+	}
 	return false;
 }
 
 void ChangeDir()
 {
-	//TODO
+	if (_getch() == 'A')
+	{
+		if (velocity_x > 0)
+			velocity_x *= -1.0;
+	}
+	if (_getch() == 'D')
+	{
+		if (velocity_x < 0)
+			velocity_x *= -1.0;
+	}
 }
 
 void GameOver()
@@ -271,3 +289,22 @@ void GameOver()
 	}
 }
 
+bool isDrop()
+{
+	for (int i = 0; i < board_number; i++)
+	{
+		if (board[i].y < position_y&&fabs(board[i].x - position.x) < 5 * 10e-1)
+			return false;
+	}
+	return true;
+}
+
+void ShowRule()
+{
+	void outtext("Tribute to Doodle Jump. Press A to move left and D to move right. Have fun");
+}
+
+void UpdateWithInput()
+{
+	ChangeDir();
+}
