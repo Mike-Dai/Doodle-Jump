@@ -10,28 +10,34 @@
 //宏定义
 #define WIDTH 480
 #define HEIGHT 600
-#define G 1
-#define V -20
+#define G 0.5
+#define V -15
 
-const int player_width = 100;//玩家高度
-const int player_height = 100;//玩家宽度
-const int board_width = 100;//跳板高度
-const int board_height = 50;//跳板宽度
-const int sleeptime = 50;//每次更新间隔时间
-const int board_number = 30;//跳板数量
+const float player_width = 100;//玩家高度
+const float player_height = 100;//玩家宽度
+const float board_width = 100;//跳板高度
+const float board_height = 50;//跳板宽度
+const int sleeptime = 20;//每次更新间隔时间
+const int board_number = 200;//跳板数量
 
 //全局变量
 float position_x, position_y;
 float velocity_x, velocity_y;
+float high_diff = 0;
+float highest;
+int state;
 IMAGE background;//背景图片
 IMAGE player_left, player_right;//玩家朝左图片，玩家朝右图片
 IMAGE left_cover, right_cover;//朝左遮罩图，朝右遮罩图
 IMAGE normal_board;//普通跳板
 IMAGE normal_cover;//普通跳板遮罩图
 
+typedef enum Player { RIGHT, LEFT, SHOOT } player_state;
+//typedef enum Board { normal, move } board_type;
+
 struct Node {
 	float x, y;
-
+	//board_type type;
 }board[board_number];
 
 //函数声明
@@ -44,6 +50,8 @@ void MoveBoard();
 void MoveDown();
 bool isOnBoard();
 void PutNewBoard();
+bool isOnBoard();
+void ChangeDir();
 void GameOver();
 
 int main()
@@ -57,8 +65,15 @@ int main()
 		/*UpdateWithInput();
 		UpdateWithoutInput();
 		*/
+		ChangeDir();
+		if (isOnBoard())
+		{
+			velocity_y = V;
+			MoveDown();
+		}
 		MoveBoard();
 		MovePlayer();
+		PutNewBoard();
 		FlushBatchDraw();//进行批量绘制，防止出现闪烁
 		Sleep(sleeptime);//程序短暂停止
 	}
@@ -122,9 +137,21 @@ void MovePlayer()
 	//更新玩家的速度和位置
 	velocity_y = velocity_y + G;//v = v0 + gt
 	position_y = position_y + velocity_y;// y = y0 + vt
+	position_x = position_x + velocity_x;
+	velocity_x = 0;
 	//放置玩家图片
-	putimage(position_x, position_y, &right_cover, NOTSRCERASE);//遮罩图
-	putimage(position_x, position_y, &player_right,SRCINVERT);//原图
+	switch (state) {
+	case RIGHT:
+		putimage(position_x, position_y, &right_cover, NOTSRCERASE);//遮罩图
+		putimage(position_x, position_y, &player_right, SRCINVERT);//原图
+		break;
+	case LEFT:
+		putimage(position_x, position_y, &left_cover, NOTSRCERASE);//遮罩图
+		putimage(position_x, position_y, &player_left, SRCINVERT);//原图
+		break;
+
+	}
+	
 }
 
 //显示跳板
@@ -132,12 +159,8 @@ void ShowBoard()
 {
 	int i;
 	int high = 0;//跳板高度
-	for (i = 0; ; i++)
+	for (i = 0; i < board_number; i++)
 	{
-		if (high > HEIGHT - board_height)
-		{
-			break;
-		}
 		board[i].x = 90 + rand() % (WIDTH * 5 / 8);//随机生成跳板横坐标，并使其靠近屏幕中部
 		board[i].y = high;//跳板纵坐标等于总高度
 		//放置跳板图片
@@ -151,9 +174,15 @@ void MoveBoard()
 {
 	putimage(0, 0, &background);//用背景图片掩盖所有物体移动的痕迹
 	int i;
-	for (i = 0; i < 12; i++)
+	for (i = 0; i < board_number; i++)
 	{
 		//每次更新都重绘跳板，防止被玩家图片掩盖
+		/*
+		if (board[i].type == move)
+		{
+			board[i].x += 5;
+		}
+		*/
 		putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 		putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 	}
@@ -167,7 +196,9 @@ void PutNewBoard()
 		if (board[i].y > HEIGHT)
 		{
 			board[i].x = 90 + rand() % (WIDTH * 5 / 8);//随机生成跳板横坐标，并使其靠近屏幕中部
-			board[i].y = 0 - board_height;//跳板纵坐标等于总高度
+			board[i].y = highest - board_height;//跳板纵坐标等于总高度
+			highest = board[i].y;
+			//board[i].type = move;
 			//放置跳板图片
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
@@ -175,11 +206,6 @@ void PutNewBoard()
 	}
 }
 
-bool isOnBoard()
-{
-	//TODO
-	return true;
-}
 
 //整体下移
 void MoveDown()
@@ -190,7 +216,7 @@ void MoveDown()
 	//寻找最下面的跳板
 	for (i = 0; i < board_number; i++)
 	{
-		if (board[i].y < 0 || board[i].y > HEIGHT)
+		if (board[i].y > HEIGHT)
 		{
 			continue;
 		}
@@ -198,19 +224,39 @@ void MoveDown()
 		{
 			lowest = board[i].y;
 		}
+		if (board[i].y < highest)
+		{
+			highest = board[i].y;
+		}
 	}
 	move_dis = lowest - (position_y + player_height);//下移距离为玩家与最下面跳板距离之差
+	if (move_dis < 0)
+	{
+		move_dis = 0;
+	}
 	//实现100毫秒内逐渐下移的动画
+	
 	while (cnt < 10)
 	{
-		position_x += move_dis;
+		position_y += move_dis / 10;
 		for (i = 0; i < board_number; i++)
 		{
-			board[i].y += move_dis;
+			board[i].y += move_dis / 10;
 		}
 		Sleep(10);
 		cnt++;
 	}
+}
+
+bool isOnBoard()
+{
+	//TODO
+	return false;
+}
+
+void ChangeDir()
+{
+	//TODO
 }
 
 void GameOver()
@@ -224,3 +270,4 @@ void GameOver()
 		cnt++;
 	}
 }
+
