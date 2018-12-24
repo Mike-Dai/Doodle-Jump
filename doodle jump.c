@@ -75,10 +75,12 @@ begin:
 	ShowBoard();
 	while (1)
 	{
-		if (_kbhit())
-		{
+		
+		//if (_kbhit())
+		//{
 			UpdateWithInput();
-		}
+		//}
+		
 		if (isOnBoard())
 		{
 			velocity_y = V;
@@ -119,12 +121,13 @@ void LoadImg()
 void Menu()
 {
 	initgraph(WIDTH,HEIGHT);
+	/*
 	putimage(0, 0, &background);
 	outtextxy(WIDTH / 2, HEIGHT / 3, "1.play");
 	outtextxy(WIDTH / 2, HEIGHT * 2 / 5, "2.rule");
 	outtextxy(WIDTH / 2, HEIGHT / 2, "choose 1 or 2");
 	char input;
-	input = _getch();
+	input = getchar();
 	switch (input)
 	{
 	case '1':
@@ -132,10 +135,10 @@ void Menu()
 	case '2':
 		Rule();
 	default:
-		//Menu();
+		Menu();
 		return;
 	}
-	
+	*/
 }
 
 void Rule()
@@ -295,35 +298,87 @@ void MoveDown()
 
 bool isOnBoard()
 {
+	/*
 	for (int i = 0; i < board_number; i++)
 	{
 		if (position_y - board[i].y >= 0 && fabs(position_x - board[i].x) < 5 * 10e-1)
 			return true;
 	}
 	return false;
+	*/
+	int i;
+	float diff_x, diff_y;
+	for (i = 0; i < board_number; i++)
+	{
+		diff_x = position_x - board[i].x;
+		diff_y = position_y + player_height - board[i].y;
+		if (velocity_y > 0 && diff_y >= 40 && diff_y <= 50 && diff_x >= -board_width / 2 && diff_x <= board_height)
+		{
+			high_diff = HEIGHT - board[i].y - board_height;
+			return true;
+		}
+	}
+	return false;
+
 }
 
 void PrintScore()
 {
 	outtextxy(WIDTH / 2, 0, "score:");
 	char s[10];
-	sprintf(s, "%d", score);
+	sprintf_s(s, "%d", score);
 	outtextxy(WIDTH / 2 + 10, 0, s);
 }
 
 void ChangeDir()
 {
-	
-	if (_getch() == 'A')
+	/*
+	if (_kbhit())
 	{
-		if (velocity_x > 0)
-			velocity_x *= -1.0;
+		if (_getch() == 'A')
+		{
+			if (velocity_x > 0)
+				velocity_x *= -1.0;
+		}
+		if (_getch() == 'D')
+		{
+			if (velocity_x < 0)
+				velocity_x *= -1.0;
+		}
 	}
-	if (_getch() == 'D')
+	*/
+	if (_kbhit())
 	{
-		if (velocity_x < 0)
-			velocity_x *= -1.0;
+		char input = _getch();
+		switch (input)
+		{
+		case 'a':
+			if (velocity_x == 0)
+			{
+				velocity_x = -15;
+			}
+			else
+			{
+				velocity_x *= -1;
+			}
+			state = LEFT;
+			break;
+		case 'd':
+			if (velocity_x == 0)
+			{
+				velocity_x = 15;
+			}
+			else
+			{
+				velocity_x *= -1;
+			}
+			state = RIGHT;
+			break;
+		default:
+			break;
+		}
 	}
+
 }
 
 void GameOver()
@@ -378,3 +433,4 @@ void Ending()
 	}
 
 }
+
