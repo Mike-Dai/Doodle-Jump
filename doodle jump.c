@@ -7,6 +7,7 @@
 #include <time.h>
 #include <stdio.h>
 #include <math.h>
+#include <stdlib.h>
 
 //宏定义
 #define WIDTH 480
@@ -14,10 +15,10 @@
 #define G 0.5
 #define V -15
 
-const float player_width = 100;//玩家高度
-const float player_height = 100;//玩家宽度
-const float board_width = 100;//跳板高度
-const float board_height = 50;//跳板宽度
+const int player_width = 100;//玩家高度
+const int player_height = 100;//玩家宽度
+const int board_width = 100;//跳板高度
+const int board_height = 50;//跳板宽度
 const int sleeptime = 20;//每次更新间隔时间
 const int board_number = 200;//跳板数量
 
@@ -27,6 +28,8 @@ float velocity_x, velocity_y;
 float high_diff = 0;
 float highest;
 int state;
+int score;
+int highscore;
 IMAGE background;//背景图片
 IMAGE player_left, player_right;//玩家朝左图片，玩家朝右图片
 IMAGE left_cover, right_cover;//朝左遮罩图，朝右遮罩图
@@ -42,7 +45,9 @@ struct Node {
 }board[board_number];
 
 //函数声明
+void LoadImg();
 void Menu();
+void Rule();
 void Startup();
 void ShowPlayer();
 void MovePlayer();
@@ -52,67 +57,102 @@ void MoveDown();
 bool isOnBoard();
 void PutNewBoard();
 bool isOnBoard();
-bool isDrop();
+void PrintScore();
 void ChangeDir();
 void GameOver();
+bool isDrop();
 void ShowRule();
+void UpdateWithInput();
+void Ending();
 
 int main()
 {
+	LoadImg();
 	Menu();
+begin:
 	Startup();
 	ShowPlayer();
 	ShowBoard();
 	while (1)
 	{
-
-		/*if(_kbhit())
+		if (_kbhit())
+		{
 			UpdateWithInput();
-		UpdateWithoutInput();
-		*/
-		ChangeDir();
+		}
 		if (isOnBoard())
 		{
 			velocity_y = V;
 			MoveDown();
 		}
+		PrintScore();
 		MoveBoard();
 		MovePlayer();
 		PutNewBoard();
+		if (isDrop())
+		{
+			GameOver();
+			break;
+		}
 		FlushBatchDraw();//进行批量绘制，防止出现闪烁
 		Sleep(sleeptime);//程序短暂停止
 	}
 	EndBatchDraw();
-	getchar();
+	goto begin;
     return 0;
 }
 
 //函数定义
 
-//菜单
-void Menu()
+void LoadImg()
 {
-	initgraph(WIDTH,HEIGHT);
-	
-}
-
-//初始化
-void Startup()
-{
-	srand(time(NULL));//重设随机数
 	//载入图片
 	loadimage(&background, "background.jpg", WIDTH, HEIGHT);
 	loadimage(&player_right, "player_right.jpg", player_width, player_height);
 	loadimage(&player_left, "player_left.jpg", player_width, player_height);
 	loadimage(&right_cover, "right_cover.jpg", player_width, player_height);
 	loadimage(&left_cover, "left_cover.jpg", player_width, player_height);
-	loadimage(&normal_board, "normal_board.jpg", board_width,board_height);
+	loadimage(&normal_board, "normal_board.jpg", board_width, board_height);
 	loadimage(&normal_cover, "normal_cover.jpg", board_width, board_height);
+}
+
+//菜单
+void Menu()
+{
+	initgraph(WIDTH,HEIGHT);
+	putimage(0, 0, &background);
+	outtextxy(WIDTH / 2, HEIGHT / 3, "1.play");
+	outtextxy(WIDTH / 2, HEIGHT * 2 / 5, "2.rule");
+	outtextxy(WIDTH / 2, HEIGHT / 2, "choose 1 or 2");
+	char input;
+	input = _getch();
+	switch (input)
+	{
+	case '1':
+		return;
+	case '2':
+		Rule();
+	default:
+		//Menu();
+		return;
+	}
+	
+}
+
+void Rule()
+{
+	//TODO
+}
+
+//初始化
+void Startup()
+{
+	srand(time(NULL));//重设随机数
 	//初始化玩家的位置和速度
 	position_x = WIDTH / 2 - player_width / 2;
 	position_y = HEIGHT - player_height + player_height * 0.15;
 	velocity_x = 0;
 	velocity_y = V;
+	score = 0;
 	BeginBatchDraw();//开始批量绘制
 }
 
@@ -257,14 +297,23 @@ bool isOnBoard()
 {
 	for (int i = 0; i < board_number; i++)
 	{
-		if (position_y - board[i].y >= 0 && fabs(position_x - board[i].x) < 5*10e-1)
+		if (position_y - board[i].y >= 0 && fabs(position_x - board[i].x) < 5 * 10e-1)
 			return true;
 	}
 	return false;
 }
 
+void PrintScore()
+{
+	outtextxy(WIDTH / 2, 0, "score:");
+	char s[10];
+	sprintf(s, "%d", score);
+	outtextxy(WIDTH / 2 + 10, 0, s);
+}
+
 void ChangeDir()
 {
+	
 	if (_getch() == 'A')
 	{
 		if (velocity_x > 0)
@@ -293,7 +342,7 @@ bool isDrop()
 {
 	for (int i = 0; i < board_number; i++)
 	{
-		if (board[i].y < position_y&&fabs(board[i].x - position.x) < 5 * 10e-1)
+		if (board[i].y < position_y&&fabs(board[i].x - position_x) < 5 * 10e-1)
 			return false;
 	}
 	return true;
@@ -301,10 +350,31 @@ bool isDrop()
 
 void ShowRule()
 {
-	void outtext("Tribute to Doodle Jump. Press A to move left and D to move right. Have fun");
+	outtext("Tribute to Doodle Jump. Press A to move left and D to move right. Have fun");
 }
 
 void UpdateWithInput()
 {
 	ChangeDir();
+}
+
+void Ending()
+{
+	putimage(0, 0, &background);
+	outtext("GAME OVER!");
+	outtext("1.play again");
+	outtext("2.exit");
+	outtext("choose 1 or 2");
+	char input;
+	input = _getch();
+	switch (input)
+	{
+	case '1':
+		break;
+	case '2':
+		exit(0);
+	default:
+		Ending();
+	}
+
 }
