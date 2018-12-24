@@ -1,7 +1,7 @@
-// doodle jump.cpp: å®šä¹‰æ§åˆ¶å°åº”ç”¨ç¨‹åºçš„å…¥å£ç‚¹ã€‚
+// doodle jump.cpp: ¶¨Òå¿ØÖÆÌ¨Ó¦ÓÃ³ÌĞòµÄÈë¿Úµã¡£
 //
 
-#include "pch.h"
+#include "stdafx.h"
 #include <graphics.h>
 #include <conio.h>
 #include <time.h>
@@ -9,20 +9,20 @@
 #include <math.h>
 #include <stdlib.h>
 
-//å®å®šä¹‰
+//ºê¶¨Òå
 #define WIDTH 480
 #define HEIGHT 600
 #define G 0.5
 #define V -15
 
-const int player_width = 100;  //ç©å®¶å®½åº¦
-const int player_height = 100; //ç©å®¶é«˜åº¦
-const int board_width = 100;   //è·³æ¿å®½åº¦
-const int board_height = 50;   //è·³æ¿é«˜åº¦
-const int sleeptime = 20;	  //æ¯æ¬¡æ›´æ–°é—´éš”æ—¶é—´
-const int board_number = 20;   //è·³æ¿æ•°é‡
+const int player_width = 100; //Íæ¼Ò¿í¶È
+const int player_height = 100; //Íæ¼Ò¸ß¶È
+const int board_width = 100; //Ìø°å¿í¶È
+const int board_height = 50; //Ìø°å¸ß¶È
+const int sleeptime = 20; //Ã¿´Î¸üĞÂ¼ä¸ôÊ±¼ä
+const int board_number = 20; //Ìø°åÊıÁ¿
 
-//å…¨å±€å˜é‡
+							 //È«¾Ö±äÁ¿
 float position_x, position_y;
 float diff_x, diff_y;
 float velocity_x, velocity_y;
@@ -31,12 +31,12 @@ float highest;
 int state;
 int score;
 int highscore;
-char ch;						 //è¾“å…¥å­—ç¬¦
-IMAGE background;				 //èƒŒæ™¯å›¾ç‰‡
-IMAGE player_left, player_right; //ç©å®¶æœå·¦å›¾ç‰‡ï¼Œç©å®¶æœå³å›¾ç‰‡
-IMAGE left_cover, right_cover;   //æœå·¦é®ç½©å›¾ï¼Œæœå³é®ç½©å›¾
-IMAGE normal_board;				 //æ™®é€šè·³æ¿
-IMAGE normal_cover;				 //æ™®é€šè·³æ¿é®ç½©å›¾
+char ch; //ÊäÈë×Ö·û
+IMAGE background; //±³¾°Í¼Æ¬
+IMAGE player_left, player_right; //Íæ¼Ò³¯×óÍ¼Æ¬£¬Íæ¼Ò³¯ÓÒÍ¼Æ¬
+IMAGE left_cover, right_cover; //³¯×óÕÚÕÖÍ¼£¬³¯ÓÒÕÚÕÖÍ¼
+IMAGE normal_board; //ÆÕÍ¨Ìø°å
+IMAGE normal_cover; //ÆÕÍ¨Ìø°åÕÚÕÖÍ¼
 IMAGE play;
 IMAGE rule;
 IMAGE button_cover;
@@ -59,26 +59,22 @@ struct Node
 	board_type type;
 } board[board_number];
 
-//å‡½æ•°å£°æ˜
-void LoadImg();
-void Menu();
-void Rule();
-void Startup();
-void ShowPlayer();
-void MovePlayer();
-void ShowBoard();
-void MoveBoard();
-void MoveDown();
-bool isOnBoard();
-void PutNewBoard();
-bool isOnBoard();
-void PrintScore();
-void ChangeDir();
-void GameOver();
-bool isDrop();
-void ShowRule();
-void UpdateWithInput();
-void Ending();
+//º¯ÊıÉùÃ÷
+void LoadImg();		//¼ÓÔØÍ¼Æ¬
+void Menu();				//²Ëµ¥
+void ShowRule();		//ÓÎÏ·¹æÔò
+void Startup();			//³õÊ¼»¯
+void MovePlayer();	//ÒÆ¶¯Íæ¼Ò
+void ChangeDir();		//¸Ä±ä·½Ïò
+void ShowBoard();	//ÏÔÊ¾Ìø°å
+void MoveBoard();	//ÒÆ¶¯Ìø°å
+void MoveDown();	//ÕûÌåÏÂÒÆ
+void PutNewBoard();//Éú³ÉĞÂÌø°å
+void PrintScore();		//´òÓ¡·ÖÊı
+bool isOnBoard();		//ÅĞ¶ÏÊÇ·ñÌ¤ÉÏÌø°å
+bool isDrop();			//ÅĞ¶ÏÊÇ·ñ×¹Âä
+void GameOver();		//ÓÎÏ·½áÊø
+void Ending();			//½áÊø½çÃæ
 
 int main()
 {
@@ -86,7 +82,6 @@ int main()
 	Menu();
 begin:
 	Startup();
-	ShowPlayer();
 	ShowBoard();
 	while (1)
 	{
@@ -104,22 +99,23 @@ begin:
 		PutNewBoard();
 		if (isDrop())
 		{
-			GameOver();
 			break;
 		}
-		FlushBatchDraw(); //è¿›è¡Œæ‰¹é‡ç»˜åˆ¶ï¼Œé˜²æ­¢å‡ºç°é—ªçƒ
-		Sleep(sleeptime); //ç¨‹åºçŸ­æš‚åœæ­¢
+		FlushBatchDraw(); //½øĞĞÅúÁ¿»æÖÆ£¬·ÀÖ¹³öÏÖÉÁË¸
+		Sleep(sleeptime); //³ÌĞò¶ÌÔİÍ£Ö¹
 	}
+	GameOver();
 	EndBatchDraw();
+	Ending();
 	goto begin;
 	return 0;
 }
 
-//å‡½æ•°å®šä¹‰
+//º¯Êı¶¨Òå
 
 void LoadImg()
 {
-	//è½½å…¥å›¾ç‰‡
+	//ÔØÈëÍ¼Æ¬
 	loadimage(&background, "background.jpg", WIDTH, HEIGHT);
 	loadimage(&player_right, "player_right.jpg", player_width, player_height);
 	loadimage(&player_left, "player_left.jpg", player_width, player_height);
@@ -132,7 +128,7 @@ void LoadImg()
 	loadimage(&rule, "rule.jpg", 262 / 3, 124 / 3);
 }
 
-//èœå•
+//²Ëµ¥
 void Menu()
 {
 	initgraph(WIDTH, HEIGHT);
@@ -152,78 +148,71 @@ void Menu()
 	switch (input)
 	{
 	case '1':
-		return;
+	return;
 	case '2':
-		Rule();
+	Rule();
 	default:
-		Menu();
-		return;
+	Menu();
+	return;
 	}
 	*/
 }
 
-//åˆå§‹åŒ–
+//³õÊ¼»¯
 void Startup()
 {
-	srand(time(NULL)); //é‡è®¾éšæœºæ•°
-	//åˆå§‹åŒ–ç©å®¶çš„ä½ç½®å’Œé€Ÿåº¦
+	srand(time(NULL)); //ÖØÉèËæ»úÊı
+					   //³õÊ¼»¯Íæ¼ÒµÄÎ»ÖÃºÍËÙ¶È
 	position_x = WIDTH / 2 - player_width / 2;
 	position_y = HEIGHT - player_height + player_height * 0.15;
 	velocity_x = 0;
 	velocity_y = V;
 	score = 0;
-	BeginBatchDraw(); //å¼€å§‹æ‰¹é‡ç»˜åˆ¶
+	BeginBatchDraw(); //¿ªÊ¼ÅúÁ¿»æÖÆ
 }
 
-//æ˜¾ç¤ºç©å®¶
-void ShowPlayer()
-{
-	putimage(position_x, position_y, &player_left);
-}
-
-//ç§»åŠ¨ç©å®¶
+//ÒÆ¶¯Íæ¼Ò
 void MovePlayer()
 {
-	//æœ¬æ®µä»£ç æµ‹è¯•ç”¨ï¼Œæ­£å¼ç‰ˆæœ¬åº”ä¿®æ”¹ä¸ºåˆ¤æ–­æ˜¯å¦è¸ä¸Šè·³æ¿
-	//ç©å®¶è½åœ°åé‡æ–°æ¢å¤å‘ä¸Šåˆé€Ÿåº¦
-	if (isOnBoard()) //ç©å®¶çš„è„šåº•ä¸ä½äºå›¾ç‰‡æœ€åº•éƒ¨
+	//Íæ¼ÒÌ¤ÉÏÌø°åºóÖØĞÂ»Ö¸´ÏòÉÏ³õËÙ¶È
+	if (isOnBoard()) 
 	{
 		velocity_y = V;
 	}
 	if (position_x < 0 - player_width)
 	{
-		position_x = WIDTH; //å¦‚æœç©å®¶è·³å‡ºå·¦è¾¹ç•Œï¼Œå°±ä»å³è¾¹ç•Œå‡ºç°
+		position_x = WIDTH; //Èç¹ûÍæ¼ÒÌø³ö×ó±ß½ç£¬¾Í´ÓÓÒ±ß½ç³öÏÖ
 	}
 	else if (position_x > WIDTH)
 	{
-		position_x = 0; //å¦‚æœç©å®¶è·³å‡ºå³è¾¹ç•Œï¼Œå°±ä»å·¦è¾¹ç•Œå‡ºç°
+		position_x = 0; //Èç¹ûÍæ¼ÒÌø³öÓÒ±ß½ç£¬¾Í´Ó×ó±ß½ç³öÏÖ
 	}
-	//æ›´æ–°ç©å®¶çš„é€Ÿåº¦å’Œä½ç½®
-	velocity_y = velocity_y + G;		  //v = v0 + gt
+	//¸üĞÂÍæ¼ÒµÄËÙ¶ÈºÍÎ»ÖÃ
+	velocity_y = velocity_y + G; //v = v0 + gt
 	position_y = position_y + velocity_y; // y = y0 + vt
 	position_x = position_x + velocity_x;
 	velocity_x = 0;
-	//æ”¾ç½®ç©å®¶å›¾ç‰‡
+	//·ÅÖÃÍæ¼ÒÍ¼Æ¬
 	switch (state)
 	{
 	case RIGHT:
-		putimage(position_x, position_y, &right_cover, NOTSRCERASE); //é®ç½©å›¾
-		putimage(position_x, position_y, &player_right, SRCINVERT);  //åŸå›¾
+		putimage(position_x, position_y, &right_cover, NOTSRCERASE); //ÕÚÕÖÍ¼
+		putimage(position_x, position_y, &player_right, SRCINVERT); //Ô­Í¼
 		break;
 	case LEFT:
-		putimage(position_x, position_y, &left_cover, NOTSRCERASE); //é®ç½©å›¾
-		putimage(position_x, position_y, &player_left, SRCINVERT);  //åŸå›¾
+		putimage(position_x, position_y, &left_cover, NOTSRCERASE); //ÕÚÕÖÍ¼
+		putimage(position_x, position_y, &player_left, SRCINVERT); //Ô­Í¼
 		break;
 	}
 }
 
-//æ˜¾ç¤ºè·³æ¿
+//ÏÔÊ¾Ìø°å
 void ShowBoard()
 {
-	int type_num; //ç”Ÿæˆè·³æ¿ç§ç±»çš„éšæœºæ•°
+	int type_num; //Éú³ÉÌø°åÖÖÀàµÄËæ»úÊı
 	for (int i = 0; i < board_number; i++)
 	{
-		board[i].x = 90 + rand() % (WIDTH * 5 / 8); //éšæœºç”Ÿæˆè·³æ¿æ¨ªåæ ‡ï¼Œå¹¶ä½¿å…¶é è¿‘å±å¹•ä¸­éƒ¨
+		board[i].x = 90 + rand() % (WIDTH * 5 / 8); //Ëæ»úÉú³ÉÌø°åºá×ø±ê£¬²¢Ê¹Æä¿¿½üÆÁÄ»ÖĞ²¿
 		board[i].y = i * board_height;
 		type_num = rand() % 10;
 		if (type_num < 3)
@@ -234,7 +223,7 @@ void ShowBoard()
 		{
 			board[i].type = normal;
 		}
-		//æ”¾ç½®è·³æ¿å›¾ç‰‡
+		//·ÅÖÃÌø°åÍ¼Æ¬
 		putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 		putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 	}
@@ -242,15 +231,15 @@ void ShowBoard()
 
 void MoveBoard()
 {
-	putimage(0, 0, &background); //ç”¨èƒŒæ™¯å›¾ç‰‡æ©ç›–æ‰€æœ‰ç‰©ä½“ç§»åŠ¨çš„ç—•è¿¹
+	putimage(0, 0, &background); //ÓÃ±³¾°Í¼Æ¬ÑÚ¸ÇËùÓĞÎïÌåÒÆ¶¯µÄºÛ¼£
 
 	for (int i = 0; i < board_number; i++)
 	{
-		if (board[i].y < 0 || board[i].y > HEIGHT) //å¦‚æœè·³æ¿ä¸åœ¨å±å¹•å†…åˆ™ä¸æ›´æ–°
+		if (board[i].y < 0 || board[i].y > HEIGHT) //Èç¹ûÌø°å²»ÔÚÆÁÄ»ÄÚÔò²»¸üĞÂ
 		{
 			continue;
 		}
-		//æ¯æ¬¡æ›´æ–°éƒ½é‡ç»˜è·³æ¿ï¼Œé˜²æ­¢è¢«ç©å®¶å›¾ç‰‡æ©ç›–
+		//Ã¿´Î¸üĞÂ¶¼ÖØ»æÌø°å£¬·ÀÖ¹±»Íæ¼ÒÍ¼Æ¬ÑÚ¸Ç
 
 		if (board[i].type == move)
 		{
@@ -273,24 +262,24 @@ void PutNewBoard()
 	{
 		if (board[i].y > HEIGHT)
 		{
-			board[i].x = 90 + rand() % (WIDTH * 5 / 8); //éšæœºç”Ÿæˆè·³æ¿æ¨ªåæ ‡ï¼Œå¹¶ä½¿å…¶é è¿‘å±å¹•ä¸­éƒ¨
-			board[i].y = highest - board_height;		//è·³æ¿çºµåæ ‡ç­‰äºæ€»é«˜åº¦
+			board[i].x = 90 + rand() % (WIDTH * 5 / 8); //Ëæ»úÉú³ÉÌø°åºá×ø±ê£¬²¢Ê¹Æä¿¿½üÆÁÄ»ÖĞ²¿
+			board[i].y = highest - board_height; //Ìø°å×İ×ø±êµÈÓÚ×Ü¸ß¶È
 			highest = board[i].y;
 			//board[i].type = move;
-			//æ”¾ç½®è·³æ¿å›¾ç‰‡
+			//·ÅÖÃÌø°åÍ¼Æ¬
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
 	}
 }
 
-//æ•´ä½“ä¸‹ç§»
+//ÕûÌåÏÂÒÆ
 void MoveDown()
 {
-	int i, cnt = 0;   //è®¡æ—¶å™¨
-	float lowest = 0; //æœ€ä¸‹é¢è·³æ¿çš„çºµåæ ‡
-	float move_dis;   //æ•´ä½“ä¸‹ç§»çš„è·ç¦»
-	//å¯»æ‰¾æœ€ä¸‹é¢çš„è·³æ¿
+	int i, cnt = 0; //¼ÆÊ±Æ÷
+	float lowest = 0; //×îÏÂÃæÌø°åµÄ×İ×ø±ê
+	float move_dis; //ÕûÌåÏÂÒÆµÄ¾àÀë
+					//Ñ°ÕÒ×îÏÂÃæµÄÌø°å
 	for (i = 0; i < board_number; i++)
 	{
 		if (board[i].y > HEIGHT)
@@ -306,12 +295,12 @@ void MoveDown()
 			highest = board[i].y;
 		}
 	}
-	move_dis = lowest - (position_y + player_height); //ä¸‹ç§»è·ç¦»ä¸ºç©å®¶ä¸æœ€ä¸‹é¢è·³æ¿è·ç¦»ä¹‹å·®
+	move_dis = lowest - (position_y + player_height); //ÏÂÒÆ¾àÀëÎªÍæ¼ÒÓë×îÏÂÃæÌø°å¾àÀëÖ®²î
 	if (move_dis < 0)
 	{
 		move_dis = 0;
 	}
-	//å®ç°100æ¯«ç§’å†…é€æ¸ä¸‹ç§»çš„åŠ¨ç”»
+	//ÊµÏÖ100ºÁÃëÄÚÖğ½¥ÏÂÒÆµÄ¶¯»­
 
 	while (cnt < 10)
 	{
@@ -368,13 +357,30 @@ void ChangeDir()
 
 void GameOver()
 {
-	int cnt = 0; //è®¡æ—¶å™¨
-	//ç©å®¶ä¸‹å åŠ¨ç”»
-	while (cnt < 60)
+	for (int i = 0; i < board_number; i++)
 	{
-		velocity_y += G;
-		Sleep(sleeptime);
+		board[i].y = 0;
+	}
+	position_y = 0;
+	for (int cnt = 0; cnt < 100; cnt++)
+	{
+		putimage(0, 0, &background);
+		velocity_y = velocity_y + G;
+		position_y = position_y + velocity_y;
+		switch (state)
+		{
+		case RIGHT:
+			putimage(position_x, position_y, &right_cover, NOTSRCERASE); //ÕÚÕÖÍ¼
+			putimage(position_x, position_y, &player_right, SRCINVERT); //Ô­Í¼
+			break;
+		case LEFT:
+			putimage(position_x, position_y, &left_cover, NOTSRCERASE); //ÕÚÕÖÍ¼
+			putimage(position_x, position_y, &player_left, SRCINVERT); //Ô­Í¼
+			break;
+		}
+		FlushBatchDraw();
 		cnt++;
+		Sleep(sleeptime);
 	}
 }
 
@@ -402,6 +408,7 @@ void Ending()
 	outtext("1.play again");
 	outtext("2.exit");
 	outtext("choose 1 or 2");
+	getchar();
 	char input;
 	input = _getch();
 	switch (input)
@@ -414,3 +421,5 @@ void Ending()
 		Ending();
 	}
 }
+
+
