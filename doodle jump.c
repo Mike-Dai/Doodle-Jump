@@ -20,7 +20,7 @@ const int player_height = 100;//玩家宽度
 const int board_width = 100;//跳板高度
 const int board_height = 50;//跳板宽度
 const int sleeptime = 20;//每次更新间隔时间
-const int board_number = 200;//跳板数量
+const int board_number = 20;//跳板数量
 
 //全局变量
 float position_x, position_y;
@@ -35,13 +35,16 @@ IMAGE player_left, player_right;//玩家朝左图片，玩家朝右图片
 IMAGE left_cover, right_cover;//朝左遮罩图，朝右遮罩图
 IMAGE normal_board;//普通跳板
 IMAGE normal_cover;//普通跳板遮罩图
+IMAGE play;
+IMAGE rule;
+IMAGE button_cover;
 
 typedef enum Player { RIGHT, LEFT, SHOOT } player_state;
-//typedef enum Board { normal, move } board_type;
+typedef enum Board { normal, move } board_type;
 
 struct Node {
 	float x, y;
-	//board_type type;
+	board_type type;
 }board[board_number];
 
 //函数声明
@@ -115,14 +118,23 @@ void LoadImg()
 	loadimage(&left_cover, "left_cover.jpg", player_width, player_height);
 	loadimage(&normal_board, "normal_board.jpg", board_width, board_height);
 	loadimage(&normal_cover, "normal_cover.jpg", board_width, board_height);
+	loadimage(&play, "play.jpg", 262 / 3, 124 / 3);
+	loadimage(&button_cover, "button_cover.jpg", 262 / 3, 124 / 3);
+	loadimage(&rule, "rule.jpg", 262 / 3, 124 / 3);
 }
 
 //菜单
 void Menu()
 {
 	initgraph(WIDTH,HEIGHT);
-	/*
+	
 	putimage(0, 0, &background);
+	putimage(WIDTH / 2, HEIGHT / 3, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2, HEIGHT / 3, &play, SRCINVERT);
+	putimage(WIDTH / 2, HEIGHT * 2 / 5, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2, HEIGHT * 2 / 5, &rule, SRCINVERT);
+	_getch();
+	/*
 	outtextxy(WIDTH / 2, HEIGHT / 3, "1.play");
 	outtextxy(WIDTH / 2, HEIGHT * 2 / 5, "2.rule");
 	outtextxy(WIDTH / 2, HEIGHT / 2, "choose 1 or 2");
@@ -197,40 +209,53 @@ void MovePlayer()
 		putimage(position_x, position_y, &left_cover, NOTSRCERASE);//遮罩图
 		putimage(position_x, position_y, &player_left, SRCINVERT);//原图
 		break;
-
 	}
-	
 }
 
 //显示跳板
 void ShowBoard()
 {
-	int i;
-	int high = 0;//跳板高度
-	for (i = 0; i < board_number; i++)
+	int type_num;//生成跳板种类的随机数
+	for (int i = 0; i < board_number; i++)
 	{
 		board[i].x = 90 + rand() % (WIDTH * 5 / 8);//随机生成跳板横坐标，并使其靠近屏幕中部
-		board[i].y = high;//跳板纵坐标等于总高度
+		board[i].y = i * board_height;
+		type_num = rand() % 10;
+		if (type_num < 3)
+		{
+			board[i].type = move;
+		}
+		else
+		{
+			board[i].type = normal;
+		}
 		//放置跳板图片
 		putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 		putimage(board[i].x, board[i].y, &normal_board,SRCINVERT);
-		high += board_height ;//总高度每次增加一个跳板的高度
 	}
 }
 
 void MoveBoard()
 {
 	putimage(0, 0, &background);//用背景图片掩盖所有物体移动的痕迹
-	int i;
-	for (i = 0; i < board_number; i++)
+
+	for (int i = 0; i < board_number; i++)
 	{
+		if (board[i].y < 0 || board[i].y > HEIGHT)//如果跳板不在屏幕内则不更新
+		{
+			continue;
+		}
 		//每次更新都重绘跳板，防止被玩家图片掩盖
-		/*
+		
 		if (board[i].type == move)
 		{
-			board[i].x += 5;
+			board[i].x += 2;
+			if (board[i].x > WIDTH)
+			{
+				board[i].x = 0;
+			}
 		}
-		*/
+		
 		putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 		putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 	}
@@ -298,14 +323,6 @@ void MoveDown()
 
 bool isOnBoard()
 {
-	/*
-	for (int i = 0; i < board_number; i++)
-	{
-		if (position_y - board[i].y >= 0 && fabs(position_x - board[i].x) < 5 * 10e-1)
-			return true;
-	}
-	return false;
-	*/
 	int i;
 	float diff_x, diff_y;
 	for (i = 0; i < board_number; i++)
@@ -332,46 +349,32 @@ void PrintScore()
 
 void ChangeDir()
 {
-	/*
-	if (_kbhit())
-	{
-		if (_getch() == 'A')
-		{
-			if (velocity_x > 0)
-				velocity_x *= -1.0;
-		}
-		if (_getch() == 'D')
-		{
-			if (velocity_x < 0)
-				velocity_x *= -1.0;
-		}
-	}
-	*/
+	
 	if (_kbhit())
 	{
 		char input = _getch();
 		switch (input)
 		{
 		case 'a':
-			if (velocity_x == 0)
-			{
+			//if (velocity_x == 0)
+			//{
 				velocity_x = -15;
-			}
-			else
-			{
-				velocity_x *= -1;
-			}
+			//}
+			//else
+			//{
+			//	velocity_x *= -1;
+			//}
 			state = LEFT;
 			break;
 		case 'd':
-			if (velocity_x == 0)
-			{
+			//if (velocity_x == 0)
+			//{
 				velocity_x = 15;
-			}
-			else
-			{
-				velocity_x *= -1;
-			}
+			//}
+			//else
+			//{
+			//	velocity_x *= -1;
+			//}
 			state = RIGHT;
 			break;
 		default:
@@ -395,12 +398,15 @@ void GameOver()
 
 bool isDrop()
 {
+	/*
 	for (int i = 0; i < board_number; i++)
 	{
 		if (board[i].y < position_y&&fabs(board[i].x - position_x) < 5 * 10e-1)
 			return false;
 	}
 	return true;
+	*/
+	return false;
 }
 
 void ShowRule()
