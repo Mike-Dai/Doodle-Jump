@@ -1,7 +1,7 @@
 // doodle jump.cpp: 定义控制台应用程序的入口点。
 //
 
-#include "stdafx.h"
+#include "pch.h"
 #include <graphics.h>
 #include <conio.h>
 #include <time.h>
@@ -22,7 +22,7 @@ const int board_height = 50; //跳板高度
 const int sleeptime = 20; //每次更新间隔时间
 const int board_number = 200; //跳板数量
 
-							 //全局变量
+//全局变量
 float position_x, position_y;
 float diff_x, diff_y;
 float velocity_x, velocity_y;
@@ -31,6 +31,7 @@ float highest;
 int state;
 int score;
 int highscore;
+bool jumped;//二段跳标识
 char ch; //输入字符
 IMAGE background; //背景图片
 IMAGE player_left, player_right; //玩家朝左图片，玩家朝右图片
@@ -69,6 +70,7 @@ void ShowRule();		//游戏规则
 void Startup();			//初始化
 void MovePlayer();	//移动玩家
 void ChangeDir();		//改变方向
+void DoubleJump();
 void ShowBoard();	//显示跳板
 void MoveBoard();	//移动跳板
 void MoveDown();	//整体下移
@@ -78,11 +80,16 @@ bool isOnBoard();		//判断是否踏上跳板
 bool isDrop();			//判断是否坠落
 void GameOver();		//游戏结束
 void Ending();			//结束界面
+bool DoNext();			//下一步操作
 
 int main()
 {
 	LoadImg();
 	Menu();
+	ch = _getch();
+	if (ch == '2')
+		ShowRule();
+	else
 begin:
 	Startup();
 	ShowBoard();
@@ -91,6 +98,8 @@ begin:
 		if (_kbhit())
 			ch = _getch();
 		ChangeDir();
+		DoubleJump();
+		ch = '0';
 		if (isOnBoard())
 		{
 			velocity_y = V;
@@ -110,6 +119,8 @@ begin:
 	GameOver();
 	EndBatchDraw();
 	Ending();
+	ch = _getch();
+	if(DoNext())
 	goto begin;
 	return 0;
 }
@@ -143,7 +154,6 @@ void Menu()
 	putimage(WIDTH / 2, HEIGHT / 3, &play, SRCINVERT);
 	putimage(WIDTH / 2, HEIGHT * 2 / 5, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2, HEIGHT * 2 / 5, &rule, SRCINVERT);
-	_getch();
 	/*
 	outtextxy(WIDTH / 2, HEIGHT / 3, "1.play");
 	outtextxy(WIDTH / 2, HEIGHT * 2 / 5, "2.rule");
@@ -180,7 +190,7 @@ void Startup()
 void MovePlayer()
 {
 	//玩家踏上跳板后重新恢复向上初速度
-	if (isOnBoard()) 
+	if (isOnBoard())
 	{
 		velocity_y = V;
 	}
@@ -238,7 +248,7 @@ void ShowBoard()
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
-		
+
 	}
 }
 
@@ -274,7 +284,7 @@ void MoveBoard()
 			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
 			break;
 		}
-		
+
 	}
 }
 
@@ -381,6 +391,7 @@ bool isOnBoard()
 		if (velocity_y >= 0 && diff_y >= 40 && diff_y <= 50 && diff_x >= -board_width / 2 && diff_x <= board_width / 2)
 		{
 			high_diff = HEIGHT - board[i].y - board_height;
+			jumped = 0;
 			return true;
 		}
 	}
@@ -465,18 +476,21 @@ void Ending()
 	outtext("1.play again");
 	outtext("2.exit");
 	outtext("choose 1 or 2");
-	getchar();
-	char input;
-	input = _getch();
-	switch (input)
+}
+
+void DoubleJump()
+{
+	if (ch == 'w'&&!jumped)
 	{
-	case '1':
-		break;
-	case '2':
-		exit(0);
-	default:
-		Ending();
+		velocity_y = V;
+		jumped = 1;
 	}
 }
 
-
+bool DoNext()
+{
+	if (ch == '1')
+		return true;
+	if (ch == '2')
+		exit(0);
+}
