@@ -20,7 +20,7 @@ const int player_height = 100; //玩家高度
 const int board_width = 100; //跳板宽度
 const int board_height = 50; //跳板高度
 const int sleeptime = 20; //每次更新间隔时间
-const int board_number = 20; //跳板数量
+const int board_number = 200; //跳板数量
 
 							 //全局变量
 float position_x, position_y;
@@ -37,9 +37,11 @@ IMAGE player_left, player_right; //玩家朝左图片，玩家朝右图片
 IMAGE left_cover, right_cover; //朝左遮罩图，朝右遮罩图
 IMAGE normal_board; //普通跳板
 IMAGE normal_cover; //普通跳板遮罩图
-IMAGE play;
-IMAGE rule;
-IMAGE button_cover;
+IMAGE spring_board;//蹦床跳板
+IMAGE spring_cover;//蹦床跳板遮罩图
+IMAGE play;//开始游戏按钮
+IMAGE rule;//游戏规则按钮
+IMAGE button_cover;//按钮遮罩图
 
 typedef enum Player
 {
@@ -50,7 +52,8 @@ typedef enum Player
 typedef enum Board
 {
 	normal,
-	move
+	move,
+	spring
 } board_type;
 
 struct Node
@@ -123,6 +126,8 @@ void LoadImg()
 	loadimage(&left_cover, "left_cover.jpg", player_width, player_height);
 	loadimage(&normal_board, "normal_board.jpg", board_width, board_height);
 	loadimage(&normal_cover, "normal_cover.jpg", board_width, board_height);
+	loadimage(&spring_board, "spring_board.jpg", board_width, board_height);
+	loadimage(&spring_cover, "spring_cover.jpg", board_width, board_height);
 	loadimage(&play, "play.jpg", 262 / 3, 124 / 3);
 	loadimage(&button_cover, "button_cover.jpg", 262 / 3, 124 / 3);
 	loadimage(&rule, "rule.jpg", 262 / 3, 124 / 3);
@@ -217,15 +222,23 @@ void ShowBoard()
 		type_num = rand() % 10;
 		if (type_num < 3)
 		{
+			board[i].type = spring;
+			putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
+			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
+		}
+		else if (type_num < 6)
+		{
 			board[i].type = move;
+			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
+			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
 		else
 		{
 			board[i].type = normal;
+			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
+			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
-		//放置跳板图片
-		putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
-		putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
+		
 	}
 }
 
@@ -244,14 +257,24 @@ void MoveBoard()
 		if (board[i].type == move)
 		{
 			board[i].x += 2;
-			if (board[i].x > WIDTH)
+			if (board[i].x > WIDTH)//如果跳板出右边界，则从左边界出现
 			{
-				board[i].x = 0;
+				board[i].x = -board_width;
 			}
 		}
-
-		putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
-		putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
+		switch (board[i].type)
+		{
+		case normal:
+		case move:
+			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
+			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
+			break;
+		case spring:
+			putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
+			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
+			break;
+		}
+		
 	}
 }
 
@@ -265,10 +288,19 @@ void PutNewBoard()
 			board[i].x = 90 + rand() % (WIDTH * 5 / 8); //随机生成跳板横坐标，并使其靠近屏幕中部
 			board[i].y = highest - board_height; //跳板纵坐标等于总高度
 			highest = board[i].y;
-			//board[i].type = move;
 			//放置跳板图片
-			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
-			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
+			switch (board[i].type)
+			{
+			case normal:
+			case move:
+				putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
+				putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
+				break;
+			case spring:
+				putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
+				putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
+				break;
+			}
 		}
 	}
 }
@@ -304,12 +336,37 @@ void MoveDown()
 
 	while (cnt < 10)
 	{
+		putimage(0, 0, &background);
 		position_y += move_dis / 10;
+		switch (state)
+		{
+		case RIGHT:
+			putimage(position_x, position_y, &right_cover, NOTSRCERASE); //遮罩图
+			putimage(position_x, position_y, &player_right, SRCINVERT); //原图
+			break;
+		case LEFT:
+			putimage(position_x, position_y, &left_cover, NOTSRCERASE); //遮罩图
+			putimage(position_x, position_y, &player_left, SRCINVERT); //原图
+			break;
+		}
 		for (i = 0; i < board_number; i++)
 		{
 			board[i].y += move_dis / 10;
+			switch (board[i].type)
+			{
+			case normal:
+			case move:
+				putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
+				putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
+				break;
+			case spring:
+				putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
+				putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
+				break;
+			}
 		}
-		Sleep(10);
+		FlushBatchDraw();
+		Sleep(sleeptime);
 		cnt++;
 	}
 }
@@ -365,7 +422,7 @@ void GameOver()
 	for (int cnt = 0; cnt < 100; cnt++)
 	{
 		putimage(0, 0, &background);
-		velocity_y = velocity_y + G;
+		velocity_y = velocity_y + G / 2;
 		position_y = position_y + velocity_y;
 		switch (state)
 		{
