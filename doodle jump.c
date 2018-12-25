@@ -1,7 +1,9 @@
+
 // doodle jump.cpp: 定义控制台应用程序的入口点。
 //
 
-#include "pch.h"
+//#include "pch.h"
+#include "stdafx.h"
 #include <graphics.h>
 #include <conio.h>
 #include <time.h>
@@ -19,18 +21,19 @@ const int player_width = 100; //玩家宽度
 const int player_height = 100; //玩家高度
 const int board_width = 100; //跳板宽度
 const int board_height = 50; //跳板高度
+const int button_width = 130;
+const int button_height = 60;
 const int sleeptime = 20; //每次更新间隔时间
 const int board_number = 200; //跳板数量
 
-//全局变量
+							  //全局变量
 float position_x, position_y;
-float diff_x, diff_y;
 float velocity_x, velocity_y;
-float high_diff = 0;
-float highest;
-int state;
-int score;
-int highscore;
+float diff_x, diff_y;
+float highest;//最高的跳板的高度
+int state;//玩家的状态
+int score;//当前得分
+int highscore;//最高分
 bool jumped;//二段跳标识
 char ch; //输入字符
 IMAGE background; //背景图片
@@ -48,7 +51,6 @@ typedef enum Player
 {
 	RIGHT,
 	LEFT,
-	SHOOT
 } player_state;
 typedef enum Board
 {
@@ -64,23 +66,23 @@ struct Node
 } board[board_number];
 
 //函数声明
-void LoadImg();		//加载图片
-void Menu();				//菜单
-void ShowRule();		//游戏规则
-void Startup();			//初始化
-void MovePlayer();	//移动玩家
-void ChangeDir();		//改变方向
+void LoadImg(); //加载图片
+void Menu(); //菜单
+void ShowRule(); //游戏规则
+void Startup(); //初始化
+void MovePlayer(); //移动玩家
+void ChangeDir(); //改变方向
 void DoubleJump();
-void ShowBoard();	//显示跳板
-void MoveBoard();	//移动跳板
-void MoveDown();	//整体下移
+void ShowBoard(); //显示跳板
+void MoveBoard(); //移动跳板
+void MoveDown(); //整体下移
 void PutNewBoard();//生成新跳板
-void PrintScore();		//打印分数
-bool isOnBoard();		//判断是否踏上跳板
-bool isDrop();			//判断是否坠落
-void GameOver();		//游戏结束
-void Ending();			//结束界面
-bool DoNext();			//下一步操作
+void PrintScore(); //打印分数
+bool isOnBoard(); //判断是否踏上跳板
+bool isDrop(); //判断是否坠落
+void GameOver(); //游戏结束
+void Ending(); //结束界面
+bool DoNext(); //下一步操作
 
 int main()
 {
@@ -90,7 +92,7 @@ int main()
 	if (ch == '2')
 		ShowRule();
 	else
-begin:
+		begin:
 	Startup();
 	ShowBoard();
 	while (1)
@@ -120,8 +122,9 @@ begin:
 	EndBatchDraw();
 	Ending();
 	ch = _getch();
-	if(DoNext())
-	goto begin;
+	if (DoNext())
+		goto begin;
+	closegraph();
 	return 0;
 }
 
@@ -139,36 +142,28 @@ void LoadImg()
 	loadimage(&normal_cover, "normal_cover.jpg", board_width, board_height);
 	loadimage(&spring_board, "spring_board.jpg", board_width, board_height);
 	loadimage(&spring_cover, "spring_cover.jpg", board_width, board_height);
-	loadimage(&play, "play.jpg", 262 / 3, 124 / 3);
-	loadimage(&button_cover, "button_cover.jpg", 262 / 3, 124 / 3);
-	loadimage(&rule, "rule.jpg", 262 / 3, 124 / 3);
+	loadimage(&play, "play.jpg", button_width, button_height);
+	loadimage(&button_cover, "button_cover.jpg", button_width, button_height);
+	loadimage(&rule, "rule.jpg", button_width, button_height);
 }
 
 //菜单
 void Menu()
 {
 	initgraph(WIDTH, HEIGHT);
-
 	putimage(0, 0, &background);
-	putimage(WIDTH / 2, HEIGHT / 3, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2, HEIGHT / 3, &play, SRCINVERT);
-	putimage(WIDTH / 2, HEIGHT * 2 / 5, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2, HEIGHT * 2 / 5, &rule, SRCINVERT);
-	/*
-	outtextxy(WIDTH / 2, HEIGHT / 3, "1.play");
-	outtextxy(WIDTH / 2, HEIGHT * 2 / 5, "2.rule");
-	outtextxy(WIDTH / 2, HEIGHT / 2, "choose 1 or 2");
-	char input;
-	input = getchar();
-	switch (input)
+	putimage(WIDTH / 2 - 10, HEIGHT / 2, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - 10, HEIGHT / 2, &play, SRCINVERT);
+	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &rule, SRCINVERT);
+	/*MOUSEMSG m;
+	m = GetMouseMsg();
+	if (m.uMsg == WM_LBUTTONDOWN)
 	{
-	case '1':
-	return;
-	case '2':
-	Rule();
-	default:
-	Menu();
-	return;
+		if (m.x >= WIDTH / 2 && m.x <= WIDTH / 2 + button_width && m.y >= HEIGHT / 2 - button_height && m.y <= HEIGHT / 2)
+		{
+
+		}
 	}
 	*/
 }
@@ -183,6 +178,7 @@ void Startup()
 	velocity_x = 0;
 	velocity_y = V;
 	score = 0;
+	highest = 0;
 	BeginBatchDraw(); //开始批量绘制
 }
 
@@ -206,7 +202,6 @@ void MovePlayer()
 	velocity_y = velocity_y + G; //v = v0 + gt
 	position_y = position_y + velocity_y; // y = y0 + vt
 	position_x = position_x + velocity_x;
-	velocity_x = 0;
 	//放置玩家图片
 	switch (state)
 	{
@@ -230,13 +225,13 @@ void ShowBoard()
 		board[i].x = 90 + rand() % (WIDTH * 5 / 8); //随机生成跳板横坐标，并使其靠近屏幕中部
 		board[i].y = i * board_height;
 		type_num = rand() % 10;
-		if (type_num < 3)
+		if (type_num < 1)
 		{
 			board[i].type = spring;
 			putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
 		}
-		else if (type_num < 6)
+		else if (type_num < 4)
 		{
 			board[i].type = move;
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
@@ -255,7 +250,6 @@ void ShowBoard()
 void MoveBoard()
 {
 	putimage(0, 0, &background); //用背景图片掩盖所有物体移动的痕迹
-
 	for (int i = 0; i < board_number; i++)
 	{
 		if (board[i].y < 0 || board[i].y > HEIGHT) //如果跳板不在屏幕内则不更新
@@ -266,7 +260,7 @@ void MoveBoard()
 
 		if (board[i].type == move)
 		{
-			board[i].x += 2;
+			board[i].x += 5;
 			if (board[i].x > WIDTH)//如果跳板出右边界，则从左边界出现
 			{
 				board[i].x = -board_width;
@@ -342,6 +336,7 @@ void MoveDown()
 	{
 		move_dis = 0;
 	}
+	score += move_dis;//加分
 	//实现100毫秒内逐渐下移的动画
 
 	while (cnt < 10)
@@ -376,7 +371,7 @@ void MoveDown()
 			}
 		}
 		FlushBatchDraw();
-		Sleep(sleeptime);
+		Sleep(sleeptime / 3);
 		cnt++;
 	}
 }
@@ -390,8 +385,12 @@ bool isOnBoard()
 		diff_y = position_y + player_height - board[i].y;
 		if (velocity_y >= 0 && diff_y >= 40 && diff_y <= 50 && diff_x >= -board_width / 2 && diff_x <= board_width / 2)
 		{
-			high_diff = HEIGHT - board[i].y - board_height;
+			if (board[i].type == spring)
+			{
+				velocity_y = V * 2;
+			}
 			jumped = 0;
+			velocity_x = 0;
 			return true;
 		}
 	}
@@ -400,10 +399,10 @@ bool isOnBoard()
 
 void PrintScore()
 {
-	outtextxy(WIDTH / 2, 0, "score:");
+	outtextxy(WIDTH / 2, HEIGHT / 2, "score:");
 	char s[10];
 	sprintf_s(s, "%d", score);
-	outtextxy(WIDTH / 2 + 10, 0, s);
+	outtextxy(WIDTH / 2 + 10, HEIGHT / 2, s);
 }
 
 void ChangeDir()
@@ -464,11 +463,6 @@ void ShowRule()
 	outtext("Tribute to Doodle Jump. Press A to move left and D to move right. Have fun.");
 }
 
-void UpdateWithInput()
-{
-	ChangeDir();
-}
-
 void Ending()
 {
 	putimage(0, 0, &background);
@@ -480,7 +474,7 @@ void Ending()
 
 void DoubleJump()
 {
-	if (ch == 'w'&&!jumped)
+	if (ch == 'w' && !jumped)
 	{
 		velocity_y = V;
 		jumped = 1;
@@ -494,3 +488,7 @@ bool DoNext()
 	if (ch == '2')
 		exit(0);
 }
+
+
+
+
