@@ -32,7 +32,7 @@ float velocity_x, velocity_y;
 float diff_x, diff_y;
 float highest;//最高的跳板的高度
 int state;//玩家的状态
-int score;//当前得分
+int score_pre,score_now;//当前得分
 int highscore;//最高分
 bool jumped;//二段跳标识
 char ch; //输入字符
@@ -84,6 +84,7 @@ bool isOnBoard(); //判断是否踏上跳板
 bool isDrop(); //判断是否坠落
 void GameOver(); //游戏结束
 void Ending(); //结束界面
+void SaveInfo();
 bool DoNext(); //下一步操作
 
 int main()
@@ -108,7 +109,6 @@ int main()
 		ch = '0';
 		if (isOnBoard())
 		{
-			velocity_y = V;
 			MoveDown();
 		}
 		PrintScore();
@@ -198,11 +198,6 @@ void Startup()
 //移动玩家
 void MovePlayer()
 {
-	//玩家踏上跳板后重新恢复向上初速度
-	if (isOnBoard())
-	{
-		velocity_y = V;
-	}
 	if (position_x < 0 - player_width)
 	{
 		position_x = WIDTH; //如果玩家跳出左边界，就从右边界出现
@@ -398,9 +393,10 @@ bool isOnBoard()
 		diff_y = position_y + player_height - board[i].y;
 		if (velocity_y >= 0 && diff_y >= 40 && diff_y <= 50 && diff_x >= -board_width / 2 && diff_x <= board_width / 2)
 		{
+			velocity_y=V;
 			if (board[i].type == spring)
 			{
-				velocity_y = V * 2;
+				velocity_y = V * 1.5;
 			}
 			jumped = 0;
 			velocity_x = 0;
@@ -531,5 +527,17 @@ bool DoNext()
 }
 
 
+void SaveInfo()
+{
+	fp = fopen("HighScore.txt", "r");
+	fscanf_s(fp, "%d", &score_pre);
+	if (score_now > score_pre)
+	{
+		fclose(fp);
+		fp = fopen("HighScore.txt", "w");
+		fprintf_s(fp, "%d", score_now);
+	}
+	fclose(fp);
+}
 
 
