@@ -45,6 +45,8 @@ IMAGE spring_board;//蹦床跳板
 IMAGE spring_cover;//蹦床跳板遮罩图
 IMAGE play;//开始游戏按钮
 IMAGE rule;//游戏规则按钮
+IMAGE playagain;//重新游戏按钮
+IMAGE exit1;//退出按钮
 IMAGE button_cover;//按钮遮罩图
 
 typedef enum Player
@@ -88,10 +90,12 @@ int main()
 {
 	LoadImg();
 	Menu();
+	/*
 	ch = _getch();
 	if (ch == '2')
 		ShowRule();
 	else
+	*/
 		begin:
 	Startup();
 	ShowBoard();
@@ -120,6 +124,7 @@ int main()
 	}
 	GameOver();
 	EndBatchDraw();
+	Sleep(2000);
 	Ending();
 	ch = _getch();
 	if (DoNext())
@@ -145,6 +150,8 @@ void LoadImg()
 	loadimage(&play, "play.jpg", button_width, button_height);
 	loadimage(&button_cover, "button_cover.jpg", button_width, button_height);
 	loadimage(&rule, "rule.jpg", button_width, button_height);
+	loadimage(&playagain, "playagain.jpg", button_width, button_height);
+	loadimage(&exit1, "exit.jpg", button_width, button_height);
 }
 
 //菜单
@@ -156,16 +163,22 @@ void Menu()
 	putimage(WIDTH / 2 - 10, HEIGHT / 2, &play, SRCINVERT);
 	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &rule, SRCINVERT);
-	/*MOUSEMSG m;
-	m = GetMouseMsg();
-	if (m.uMsg == WM_LBUTTONDOWN)
+	while (true)
 	{
-		if (m.x >= WIDTH / 2 && m.x <= WIDTH / 2 + button_width && m.y >= HEIGHT / 2 - button_height && m.y <= HEIGHT / 2)
-		{
+		MOUSEMSG m;
+		m = GetMouseMsg();
 
+		if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 - button_height && m.y <= HEIGHT / 2)
+		{
+			return;
 		}
+		else if (m.x >= WIDTH / 2 -10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 - button_height && m.y <= HEIGHT * 3 / 4)
+		{
+			ShowRule();
+		}
+		
 	}
-	*/
+	
 }
 
 //初始化
@@ -410,11 +423,11 @@ void ChangeDir()
 	switch (ch)
 	{
 	case 'a':
-		velocity_x = -15;
+		velocity_x = -10;
 		state = LEFT;
 		break;
 	case 'd':
-		velocity_x = 15;
+		velocity_x = 10;
 		state = RIGHT;
 		break;
 	default:
@@ -460,16 +473,44 @@ bool isDrop()
 
 void ShowRule()
 {
-	outtext("Tribute to Doodle Jump. Press A to move left and D to move right. Have fun.");
+	putimage(0, 0, &background);
+	outtextxy(WIDTH  / 3, HEIGHT *2 / 5, "Tribute to Doodle Jump.");
+	outtextxy(WIDTH  / 3, HEIGHT / 2, "Press A and D to move.");
+	outtextxy(WIDTH  / 3, HEIGHT / 2 + 20, "Press W to jump.");
+	outtextxy(WIDTH  / 3, HEIGHT / 2 + 40, "If you drop, you will die.");
 }
 
 void Ending()
 {
 	putimage(0, 0, &background);
-	outtext("GAME OVER!");
-	outtext("1.play again");
-	outtext("2.exit");
-	outtext("choose 1 or 2");
+	
+	outtextxy(WIDTH / 3, HEIGHT * 2 / 5, "GAME OVER!");
+	outtextxy(WIDTH / 3, HEIGHT / 2, "1.play again");
+	outtextxy(WIDTH / 3, HEIGHT / 2 + 20, "2.exit");
+	outtextxy(WIDTH / 3, HEIGHT / 2 + 40, "choose 1 or 2");
+	/*
+	putimage(WIDTH / 2 - 10, HEIGHT / 2, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - 10, HEIGHT / 2, &playagain, SRCINVERT);
+	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &exit1, SRCINVERT);
+	while (true)
+	{
+		putimage(0, 0, &background);
+		MOUSEMSG m;
+		m = GetMouseMsg();
+
+		if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 - button_height && m.y <= HEIGHT / 2)
+		{
+			return;
+		}
+		else if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 - button_height && m.y <= HEIGHT * 3 / 4)
+		{
+			exit(0);
+		}
+	}
+	Sleep(2000);
+	getchar();
+	*/
 }
 
 void DoubleJump()
