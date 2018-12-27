@@ -32,10 +32,10 @@ float velocity_x, velocity_y;
 float diff_x, diff_y;
 float highest;//最高的跳板的高度
 int state;//玩家的状态
-int score_pre,score_now;//当前得分
-int highscore;//最高分
+int score_pre, score_now;//最高分/当前得分
 bool jumped;//二段跳标识
 char ch; //输入字符
+FILE* fp;
 IMAGE background; //背景图片
 IMAGE player_left, player_right; //玩家朝左图片，玩家朝右图片
 IMAGE left_cover, right_cover; //朝左遮罩图，朝右遮罩图
@@ -111,7 +111,6 @@ int main()
 		{
 			MoveDown();
 		}
-		PrintScore();
 		MoveBoard();
 		MovePlayer();
 		PutNewBoard();
@@ -119,12 +118,12 @@ int main()
 		{
 			break;
 		}
+		PrintScore();
 		FlushBatchDraw(); //进行批量绘制，防止出现闪烁
 		Sleep(sleeptime); //程序短暂停止
 	}
 	GameOver();
 	EndBatchDraw();
-	Sleep(2000);
 	Ending();
 	ch = _getch();
 	if (DoNext())
@@ -167,16 +166,17 @@ void Menu()
 	{
 		MOUSEMSG m;
 		m = GetMouseMsg();
-
-		if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 - button_height && m.y <= HEIGHT / 2)
+		if (m.uMsg == WM_LBUTTONDOWN)
 		{
-			return;
-		}
-		else if (m.x >= WIDTH / 2 -10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 - button_height && m.y <= HEIGHT * 3 / 4)
-		{
-			ShowRule();
-		}
-		
+			if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 && m.y <= HEIGHT / 2 + button_height)
+			{
+				return;
+			}
+			else if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			{
+				ShowRule();
+			}
+		}	
 	}
 	
 }
@@ -190,7 +190,7 @@ void Startup()
 	position_y = HEIGHT - player_height + player_height * 0.15;
 	velocity_x = 0;
 	velocity_y = V;
-	score = 0;
+	score_now = 0;
 	highest = 0;
 	BeginBatchDraw(); //开始批量绘制
 }
@@ -198,6 +198,7 @@ void Startup()
 //移动玩家
 void MovePlayer()
 {
+	//玩家踏上跳板后重新恢复向上初速度
 	if (position_x < 0 - player_width)
 	{
 		position_x = WIDTH; //如果玩家跳出左边界，就从右边界出现
@@ -344,7 +345,7 @@ void MoveDown()
 	{
 		move_dis = 0;
 	}
-	score += move_dis;//加分
+	score_now += move_dis;//加分
 	//实现100毫秒内逐渐下移的动画
 
 	while (cnt < 10)
@@ -393,7 +394,7 @@ bool isOnBoard()
 		diff_y = position_y + player_height - board[i].y;
 		if (velocity_y >= 0 && diff_y >= 40 && diff_y <= 50 && diff_x >= -board_width / 2 && diff_x <= board_width / 2)
 		{
-			velocity_y=V;
+			velocity_y = V;
 			if (board[i].type == spring)
 			{
 				velocity_y = V * 1.5;
@@ -408,10 +409,10 @@ bool isOnBoard()
 
 void PrintScore()
 {
-	outtextxy(WIDTH / 2, HEIGHT / 2, "score:");
+	outtextxy(WIDTH / 2 , 10, "score:");
 	char s[10];
-	sprintf_s(s, "%d", score);
-	outtextxy(WIDTH / 2 + 10, HEIGHT / 2, s);
+	sprintf_s(s, "%d", score_now);
+	outtextxy(WIDTH / 2 + 40, 10, s);
 }
 
 void ChangeDir()
@@ -484,6 +485,7 @@ void Ending()
 	outtextxy(WIDTH / 3, HEIGHT / 2, "1.play again");
 	outtextxy(WIDTH / 3, HEIGHT / 2 + 20, "2.exit");
 	outtextxy(WIDTH / 3, HEIGHT / 2 + 40, "choose 1 or 2");
+	SaveInfo();
 	/*
 	putimage(WIDTH / 2 - 10, HEIGHT / 2, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2 - 10, HEIGHT / 2, &playagain, SRCINVERT);
@@ -522,10 +524,12 @@ bool DoNext()
 {
 	if (ch == '1')
 		return true;
-	if (ch == '2')
+	else if (ch == '2')
 		exit(0);
-}
+	else
+		Ending();
 
+}
 
 void SaveInfo()
 {
@@ -539,5 +543,6 @@ void SaveInfo()
 	}
 	fclose(fp);
 }
+
 
 
