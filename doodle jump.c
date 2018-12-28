@@ -125,7 +125,6 @@ int main()
 	GameOver();
 	EndBatchDraw();
 	Ending();
-	ch = _getch();
 	if (DoNext())
 		goto begin;
 	closegraph();
@@ -231,7 +230,7 @@ void ShowBoard()
 	int type_num; //生成跳板种类的随机数
 	for (int i = 0; i < board_number; i++)
 	{
-		board[i].x = 90 + rand() % (WIDTH * 5 / 8); //随机生成跳板横坐标，并使其靠近屏幕中部
+		board[i].x = rand() % (WIDTH * 3 / 4); //随机生成跳板横坐标，并使其靠近屏幕中部
 		board[i].y = i * board_height;
 		type_num = rand() % 10;
 		if (type_num < 1)
@@ -298,7 +297,7 @@ void PutNewBoard()
 	{
 		if (board[i].y > HEIGHT)
 		{
-			board[i].x = 90 + rand() % (WIDTH * 5 / 8); //随机生成跳板横坐标，并使其靠近屏幕中部
+			board[i].x = rand() % (WIDTH * 3 / 4); //随机生成跳板横坐标，并使其靠近屏幕中部
 			board[i].y = highest - board_height; //跳板纵坐标等于总高度
 			highest = board[i].y;
 			//放置跳板图片
@@ -409,20 +408,26 @@ bool isOnBoard()
 
 void PrintScore()
 {
-	outtextxy(WIDTH / 2 , 10, "score:");
-	char s[10];
-	sprintf_s(s, "%d", score_now);
-	outtextxy(WIDTH / 2 + 40, 10, s);
+	outtextxy(WIDTH / 2 , 10, "Score:");
+	outtextxy(WIDTH / 2, 40, "Highest Score:");
+	char s1[10];
+	char s2[10];
+	sprintf_s(s1, "%d", score_now);
+	outtextxy(WIDTH / 2 + 40, 10, s1);
+	sprintf_s(s2, "%d", score_pre);
+	outtextxy(WIDTH / 2 + 100, 40, s2);
 }
 
 void ChangeDir()
 {
 	switch (ch)
 	{
+	case 'A':
 	case 'a':
 		velocity_x = -10;
 		state = LEFT;
 		break;
+	case 'D':
 	case 'd':
 		velocity_x = 10;
 		state = RIGHT;
@@ -463,7 +468,7 @@ void GameOver()
 
 bool isDrop()
 {
-	if (position_y > HEIGHT)
+	if (position_y > HEIGHT)//掉出屏幕底端
 		return true;
 	return false;
 }
@@ -480,35 +485,40 @@ void ShowRule()
 void Ending()
 {
 	putimage(0, 0, &background);
-	
+	/*
 	outtextxy(WIDTH / 3, HEIGHT * 2 / 5, "GAME OVER!");
 	outtextxy(WIDTH / 3, HEIGHT / 2, "1.play again");
 	outtextxy(WIDTH / 3, HEIGHT / 2 + 20, "2.exit");
 	outtextxy(WIDTH / 3, HEIGHT / 2 + 40, "choose 1 or 2");
-	SaveInfo();
-	/*
+	*/
+	SaveInfo();                        //分数存档
 	putimage(WIDTH / 2 - 10, HEIGHT / 2, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2 - 10, HEIGHT / 2, &playagain, SRCINVERT);
 	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &exit1, SRCINVERT);
 	while (true)
 	{
-		putimage(0, 0, &background);
 		MOUSEMSG m;
 		m = GetMouseMsg();
-
-		if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 - button_height && m.y <= HEIGHT / 2)
-		{
-			return;
-		}
-		else if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 - button_height && m.y <= HEIGHT * 3 / 4)
-		{
-			exit(0);
+		if (m.uMsg == WM_LBUTTONDOWN) {
+			//点击"playagain"按钮
+			if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 && m.y <= HEIGHT / 2 + button_height)
+			{
+				ch == '1';
+				return;
+			}
+			//点击"exit"按钮
+			else if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			{
+				ch == '2';
+				return;
+			}
+			else {
+				continue;
+			}
 		}
 	}
-	Sleep(2000);
-	getchar();
-	*/
+	
 }
 
 void DoubleJump()
@@ -516,7 +526,7 @@ void DoubleJump()
 	if (ch == 'w' && !jumped)
 	{
 		velocity_y = V;
-		jumped = 1;
+		jumped = 1;//标记为已经跳过一次
 	}
 }
 
@@ -528,7 +538,6 @@ bool DoNext()
 		exit(0);
 	else
 		Ending();
-
 }
 
 void SaveInfo()
