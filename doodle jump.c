@@ -14,8 +14,8 @@
 //宏定义
 #define WIDTH 480
 #define HEIGHT 600
-#define G 0.5
-#define V -15
+#define G 0.2
+#define V -10
 
 const int player_width = 100; //玩家宽度
 const int player_height = 100; //玩家高度
@@ -23,7 +23,7 @@ const int board_width = 100; //跳板宽度
 const int board_height = 50; //跳板高度
 const int button_width = 130;
 const int button_height = 60;
-const int sleeptime = 20; //每次更新间隔时间
+const int sleeptime = 8; //每次更新间隔时间
 const int board_number = 200; //跳板数量
 
 							  //全局变量
@@ -175,20 +175,20 @@ void Menu()
 	{
 		MOUSEMSG m;
 		m = GetMouseMsg();
-		if (m.uMsg == WM_LBUTTONDOWN)
+		if (m.uMsg == WM_LBUTTONDOWN)//按下鼠标左键
 		{
 			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT / 2 && m.y <= HEIGHT / 2 + button_height)
 			{
-				return;
+				return;//开始游戏
 			}
 			else if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 5 / 8 && m.y <= HEIGHT * 5 / 8 + button_height)
 			{
-				ShowRule();
+				ShowRule();//显示规则
 				return;
 			}
 			else if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
 			{
-				exit(0);
+				exit(0);//退出游戏
 			}
 		}	
 	}
@@ -247,22 +247,22 @@ void ShowBoard()
 	{
 		board[i].x = rand() % (WIDTH * 3 / 4); //随机生成跳板横坐标，并使其靠近屏幕中部
 		board[i].y = i * board_height;
-		type_num = rand() % 10;
+		type_num = rand() % 10;//随机生成跳板种类
 		if (type_num < 1)
 		{
-			board[i].type = spring;
+			board[i].type = spring;//蹦床跳板
 			putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
 		}
 		else if (type_num < 4)
 		{
-			board[i].type = move;
+			board[i].type = move;//移动跳板
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
 		else
 		{
-			board[i].type = normal;
+			board[i].type = normal;//普通跳板
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
@@ -270,6 +270,7 @@ void ShowBoard()
 	}
 }
 
+//移动跳板
 void MoveBoard()
 {
 	putimage(0, 0, &background); //用背景图片掩盖所有物体移动的痕迹
@@ -305,6 +306,7 @@ void MoveBoard()
 	}
 }
 
+//生成新跳板
 void PutNewBoard()
 {
 	int i;
@@ -338,7 +340,7 @@ void MoveDown()
 	int i, cnt = 0; //计时器
 	float lowest = 0; //最下面跳板的纵坐标
 	float move_dis; //整体下移的距离
-					//寻找最下面的跳板
+	//寻找最下面的跳板和最上面的跳板
 	for (i = 0; i < board_number; i++)
 	{
 		if (board[i].y > HEIGHT)
@@ -355,13 +357,16 @@ void MoveDown()
 		}
 	}
 	move_dis = lowest - (position_y + player_height); //下移距离为玩家与最下面跳板距离之差
-	if (move_dis < 0)
+	if (move_dis < 0)//防止画面上升
 	{
 		move_dis = 0;
 	}
 	score_now += move_dis;//加分
-	//实现100毫秒内逐渐下移的动画
-
+	if (score_now > score_pre)//如果超过最高分，则更新
+	{
+		score_pre = score_now;
+	}
+	//实现逐渐下移的动画
 	while (cnt < 10)
 	{
 		putimage(0, 0, &background);
@@ -399,6 +404,7 @@ void MoveDown()
 	}
 }
 
+//判断是否踩上跳板
 bool isOnBoard()
 {
 	int i;
@@ -421,6 +427,7 @@ bool isOnBoard()
 	return false;
 }
 
+//打印分数
 void PrintScore()
 {
 	settextstyle(20, 10, "Arial");
@@ -434,18 +441,19 @@ void PrintScore()
 	outtextxy(WIDTH / 2 + 60, 40, s2);
 }
 
+//改变方向
 void ChangeDir()
 {
 	switch (ch)
 	{
 	case 'A':
 	case 'a':
-		velocity_x = -10;
+		velocity_x = -7;
 		state = LEFT;
 		break;
 	case 'D':
 	case 'd':
-		velocity_x = 10;
+		velocity_x = 7;
 		state = RIGHT;
 		break;
 	default:
@@ -453,6 +461,7 @@ void ChangeDir()
 	}
 }
 
+//游戏结束动画
 void GameOver()
 {
 	for (int i = 0; i < board_number; i++)
@@ -482,6 +491,7 @@ void GameOver()
 	}
 }
 
+//判断是否坠落
 bool isDrop()
 {
 	if (position_y > HEIGHT)//掉出屏幕底端
@@ -489,6 +499,7 @@ bool isDrop()
 	return false;
 }
 
+//显示规则
 void ShowRule()
 {
 	putimage(0, 0, &background);
@@ -508,12 +519,14 @@ void ShowRule()
 		{
 			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
 			{
-					return;
+				break;
 			}
 		}
 	}
+	return;
 }
 
+//结束界面
 void Ending()
 {
 	putimage(0, 0, &background);
@@ -557,6 +570,7 @@ void Ending()
 	
 }
 
+//二段跳
 void DoubleJump()
 {
 	if (ch == 'w' && !jumped)
@@ -566,6 +580,7 @@ void DoubleJump()
 	}
 }
 
+//执行下一步
 bool DoNext()
 {
 	if (ch == '1')
@@ -576,6 +591,7 @@ bool DoNext()
 		Ending();
 }
 
+//保存分数
 void SaveInfo()
 {
 	if (score_now > score_pre)
