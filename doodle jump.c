@@ -37,6 +37,8 @@ bool jumped;//二段跳标识
 char ch; //输入字符
 FILE* fp;
 IMAGE background; //背景图片
+IMAGE menuback;//菜单背景
+IMAGE endback;//结束界面背景
 IMAGE player_left, player_right; //玩家朝左图片，玩家朝右图片
 IMAGE left_cover, right_cover; //朝左遮罩图，朝右遮罩图
 IMAGE normal_board; //普通跳板
@@ -132,7 +134,9 @@ begin:
 void LoadImg()
 {
 	//载入图片
-	loadimage(&background, "background.jpg", WIDTH, HEIGHT);
+	loadimage(&background, "background1.jpg", WIDTH, HEIGHT);
+	loadimage(&menuback, "menuback.jpg", WIDTH, HEIGHT);
+	loadimage(&endback, "gameover.jpg", WIDTH, HEIGHT);
 	loadimage(&player_right, "player_right.jpg", player_width, player_height);
 	loadimage(&player_left, "player_left.jpg", player_width, player_height);
 	loadimage(&right_cover, "right_cover.jpg", player_width, player_height);
@@ -164,7 +168,7 @@ void LoadInfo()
 void Menu()
 {
 	initgraph(WIDTH, HEIGHT);
-	putimage(0, 0, &background);
+	putimage(0, 0, &menuback);
 	putimage(WIDTH / 2 - board_width / 2, HEIGHT / 2, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2 - board_width / 2, HEIGHT / 2, &play, SRCINVERT);
 	putimage(WIDTH / 2 - board_width / 2, HEIGHT *5 / 8, &button_cover, NOTSRCERASE);
@@ -247,14 +251,14 @@ void ShowBoard()
 	{
 		board[i].x = rand() % (WIDTH * 3 / 4); //随机生成跳板横坐标，并使其靠近屏幕中部
 		board[i].y = i * board_height;
-		type_num = rand() % 10;//随机生成跳板种类
-		if (type_num < 1)
+		type_num = rand() % 100;//随机生成跳板种类
+		if (type_num < 5)
 		{
 			board[i].type = spring;//蹦床跳板
 			putimage(board[i].x, board[i].y, &spring_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
 		}
-		else if (type_num < 4)
+		else if (type_num < 20)
 		{
 			board[i].type = move;//移动跳板
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
@@ -284,7 +288,7 @@ void MoveBoard()
 
 		if (board[i].type == move)
 		{
-			board[i].x += 5;
+			board[i].x += 2;
 			if (board[i].x > WIDTH)//如果跳板出右边界，则从左边界出现
 			{
 				board[i].x = -board_width;
@@ -529,7 +533,7 @@ void ShowRule()
 //结束界面
 void Ending()
 {
-	putimage(0, 0, &background);
+	putimage(0, 0, &endback);
 	settextstyle(20, 10, "Arial");
 	outtextxy(WIDTH / 2 - 80, 250, "Score:");
 	outtextxy(WIDTH / 2 - 80, 280, "Highest Score:");
