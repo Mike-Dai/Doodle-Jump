@@ -69,12 +69,13 @@ struct Node
 
 //函数声明
 void LoadImg(); //加载图片
+void LoadInfo();//加载分数
 void Menu(); //菜单
 void ShowRule(); //游戏规则
 void Startup(); //初始化
 void MovePlayer(); //移动玩家
 void ChangeDir(); //改变方向
-void DoubleJump();
+void DoubleJump();//二段跳
 void ShowBoard(); //显示跳板
 void MoveBoard(); //移动跳板
 void MoveDown(); //整体下移
@@ -84,20 +85,15 @@ bool isOnBoard(); //判断是否踏上跳板
 bool isDrop(); //判断是否坠落
 void GameOver(); //游戏结束
 void Ending(); //结束界面
-void SaveInfo();
+void SaveInfo();//保存分数
 bool DoNext(); //下一步操作
 
 int main()
 {
 	LoadImg();
 	Menu();
-	/*
-	ch = _getch();
-	if (ch == '2')
-		ShowRule();
-	else
-	*/
-		begin:
+begin:
+	LoadInfo();
 	Startup();
 	ShowBoard();
 	while (1)
@@ -152,28 +148,47 @@ void LoadImg()
 	loadimage(&exit1, "exit.jpg", button_width, button_height);
 }
 
+//加载分数
+void LoadInfo()
+{
+	fp = fopen("HighScore.txt", "r");
+	if (fp == NULL)
+	{
+		printf("Please create \"HighScore.txt\" first!\n");
+	}
+	fscanf_s(fp, "%d", &score_pre);
+	fclose(fp);
+}
+
 //菜单
 void Menu()
 {
 	initgraph(WIDTH, HEIGHT);
 	putimage(0, 0, &background);
-	putimage(WIDTH / 2 - 10, HEIGHT / 2, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2 - 10, HEIGHT / 2, &play, SRCINVERT);
-	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &rule, SRCINVERT);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT / 2, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT / 2, &play, SRCINVERT);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT *5 / 8, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT *5 / 8, &rule, SRCINVERT);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &exit1, SRCINVERT);
 	while (true)
 	{
 		MOUSEMSG m;
 		m = GetMouseMsg();
 		if (m.uMsg == WM_LBUTTONDOWN)
 		{
-			if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 && m.y <= HEIGHT / 2 + button_height)
+			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT / 2 && m.y <= HEIGHT / 2 + button_height)
 			{
 				return;
 			}
-			else if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			else if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 5 / 8 && m.y <= HEIGHT * 5 / 8 + button_height)
 			{
 				ShowRule();
+				return;
+			}
+			else if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			{
+				exit(0);
 			}
 		}	
 	}
@@ -408,14 +423,15 @@ bool isOnBoard()
 
 void PrintScore()
 {
-	outtextxy(WIDTH / 2 , 10, "Score:");
-	outtextxy(WIDTH / 2, 40, "Highest Score:");
+	settextstyle(20, 10, "Arial");
+	outtextxy(WIDTH / 2 - 80 , 10, "Score:");
+	outtextxy(WIDTH / 2 - 80, 40, "Highest Score:");
 	char s1[10];
 	char s2[10];
 	sprintf_s(s1, "%d", score_now);
-	outtextxy(WIDTH / 2 + 40, 10, s1);
+	outtextxy(WIDTH / 2 - 20, 10, s1);
 	sprintf_s(s2, "%d", score_pre);
-	outtextxy(WIDTH / 2 + 100, 40, s2);
+	outtextxy(WIDTH / 2 + 60, 40, s2);
 }
 
 void ChangeDir()
@@ -476,41 +492,61 @@ bool isDrop()
 void ShowRule()
 {
 	putimage(0, 0, &background);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &play, SRCINVERT);
+	settextstyle(20, 10, "Arial");
 	outtextxy(WIDTH  / 3, HEIGHT *2 / 5, "Tribute to Doodle Jump.");
 	outtextxy(WIDTH  / 3, HEIGHT / 2, "Press A and D to move.");
-	outtextxy(WIDTH  / 3, HEIGHT / 2 + 20, "Press W to jump.");
+	outtextxy(WIDTH  / 3, HEIGHT / 2 + 20, "Press W for double jump.");
 	outtextxy(WIDTH  / 3, HEIGHT / 2 + 40, "If you drop, you will die.");
+	outtextxy(WIDTH / 3, HEIGHT / 2 + 60, "Have fun.");
+	MOUSEMSG m;
+	m = GetMouseMsg();
+	while (1) 
+	{
+		if (m.uMsg == WM_LBUTTONDOWN)
+		{
+			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			{
+					return;
+			}
+		}
+	}
 }
 
 void Ending()
 {
 	putimage(0, 0, &background);
-	/*
-	outtextxy(WIDTH / 3, HEIGHT * 2 / 5, "GAME OVER!");
-	outtextxy(WIDTH / 3, HEIGHT / 2, "1.play again");
-	outtextxy(WIDTH / 3, HEIGHT / 2 + 20, "2.exit");
-	outtextxy(WIDTH / 3, HEIGHT / 2 + 40, "choose 1 or 2");
-	*/
+	settextstyle(20, 10, "Arial");
+	outtextxy(WIDTH / 2 - 80, 250, "Score:");
+	outtextxy(WIDTH / 2 - 80, 280, "Highest Score:");
+	char s1[10];
+	char s2[10];
+	sprintf_s(s1, "%d", score_now);
+	outtextxy(WIDTH / 2 - 20, 250, s1);
+	sprintf_s(s2, "%d", score_pre);
+	outtextxy(WIDTH / 2 + 60, 280, s2);
+	
 	SaveInfo();                        //分数存档
-	putimage(WIDTH / 2 - 10, HEIGHT / 2, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2 - 10, HEIGHT / 2, &playagain, SRCINVERT);
-	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2 - 10, HEIGHT * 3 / 4, &exit1, SRCINVERT);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 5 / 8, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 5 / 8, &playagain, SRCINVERT);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &exit1, SRCINVERT);
 	while (true)
 	{
 		MOUSEMSG m;
 		m = GetMouseMsg();
 		if (m.uMsg == WM_LBUTTONDOWN) {
 			//点击"playagain"按钮
-			if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT / 2 && m.y <= HEIGHT / 2 + button_height)
+			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 5 / 8 && m.y <= HEIGHT * 5 / 8 + button_height)
 			{
-				ch == '1';
+				ch = '1';
 				return;
 			}
 			//点击"exit"按钮
-			else if (m.x >= WIDTH / 2 - 10 && m.x <= WIDTH / 2 - 10 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			else if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
 			{
-				ch == '2';
+				ch = '2';
 				return;
 			}
 			else {
@@ -542,13 +578,15 @@ bool DoNext()
 
 void SaveInfo()
 {
-	fp = fopen("HighScore.txt", "r");
-	fscanf_s(fp, "%d", &score_pre);
 	if (score_now > score_pre)
 	{
-		fclose(fp);
 		fp = fopen("HighScore.txt", "w");
 		fprintf_s(fp, "%d", score_now);
+	}
+	else
+	{
+		fp = fopen("HighScore.txt", "w");
+		fprintf_s(fp, "%d", score_pre);
 	}
 	fclose(fp);
 }
