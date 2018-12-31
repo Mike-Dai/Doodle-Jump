@@ -24,13 +24,14 @@ const int board_height = 50; //跳板高度
 const int button_width = 130;
 const int button_height = 60;
 const int sleeptime = 8; //每次更新间隔时间
-const int board_number = 200; //跳板数量
+const int board_number = 20; //跳板数量
 
-							  //全局变量
+//全局变量
 float position_x, position_y;
 float velocity_x, velocity_y;
 float diff_x, diff_y;
-float highest;//最高的跳板的高度
+float highest = 600;//最高的跳板的高度
+float lowest = 0;
 int state;//玩家的状态
 int score_pre, score_now;//最高分/当前得分
 bool jumped;//二段跳标识
@@ -78,17 +79,17 @@ void Startup(); //初始化
 void MovePlayer(); //移动玩家
 void ChangeDir(); //改变方向
 void DoubleJump();//二段跳
-void ShowBoard(); //显示跳板
-void MoveBoard(); //移动跳板
-void MoveDown(); //整体下移
-void PutNewBoard();//生成新跳板
-void PrintScore(); //打印分数
 bool isOnBoard(); //判断是否踏上跳板
 bool isDrop(); //判断是否坠落
-void GameOver(); //游戏结束
-void Ending(); //结束界面
+void ShowBoard(); //显示跳板
+void MoveBoard(); //移动跳板
+void PutNewBoard();//生成新跳板
+void MoveDown(); //整体下移
+void PrintScore(); //打印分数
 void SaveInfo();//保存分数
 bool DoNext(); //下一步操作
+void GameOver(); //游戏结束
+void Ending(); //结束界面
 
 int main()
 {
@@ -97,6 +98,7 @@ int main()
 begin:
 	LoadInfo();
 	Startup();
+	BeginBatchDraw();
 	ShowBoard();
 	while (1)
 	{
@@ -111,7 +113,6 @@ begin:
 		}
 		MoveBoard();
 		MovePlayer();
-		PutNewBoard();
 		if (isDrop())
 		{
 			break;
@@ -196,7 +197,6 @@ void Menu()
 			}
 		}	
 	}
-	
 }
 
 //初始化
@@ -210,7 +210,6 @@ void Startup()
 	velocity_y = V;
 	score_now = 0;
 	highest = 0;
-	BeginBatchDraw(); //开始批量绘制
 }
 
 //移动玩家
@@ -270,7 +269,6 @@ void ShowBoard()
 			putimage(board[i].x, board[i].y, &normal_cover, NOTSRCERASE);
 			putimage(board[i].x, board[i].y, &normal_board, SRCINVERT);
 		}
-
 	}
 }
 
@@ -285,7 +283,6 @@ void MoveBoard()
 			continue;
 		}
 		//每次更新都重绘跳板，防止被玩家图片掩盖
-
 		if (board[i].type == move)
 		{
 			board[i].x += 2;
@@ -306,7 +303,6 @@ void MoveBoard()
 			putimage(board[i].x, board[i].y, &spring_board, SRCINVERT);
 			break;
 		}
-
 	}
 }
 
@@ -338,11 +334,35 @@ void PutNewBoard()
 	}
 }
 
+//判断是否踩上跳板
+bool isOnBoard()
+{
+	int i;
+	for (i = 0; i < board_number; i++)
+	{
+		diff_x = position_x - board[i].x;								//与跳板的横坐标差
+		diff_y = position_y + player_height - board[i].y;	//与跳板的纵坐标差
+															//如果踏上跳板
+		if (velocity_y >= 0 && diff_y >= 30 && diff_y <= 50 && diff_x >= -board_width * 2 / 5 && diff_x <= board_width * 2 / 5)
+		{
+			velocity_y = V;//垂直速度重置为初速度
+			if (board[i].type == spring)
+			{
+				velocity_y = V * 1.5;//如果是蹦床，则初速度更大
+			}
+			jumped = 0;//重置二段跳标记
+			velocity_x = 0;//重置水平速度
+			return true;
+		}
+	}
+	return false;
+}
+
 //整体下移
 void MoveDown()
 {
 	int i, cnt = 0; //计时器
-	float lowest = 0; //最下面跳板的纵坐标
+	//float lowest = 0; //最下面跳板的纵坐标
 	float move_dis; //整体下移的距离
 	//寻找最下面的跳板和最上面的跳板
 	for (i = 0; i < board_number; i++)
@@ -360,6 +380,7 @@ void MoveDown()
 			highest = board[i].y;
 		}
 	}
+	PutNewBoard();
 	move_dis = lowest - (position_y + player_height); //下移距离为玩家与最下面跳板距离之差
 	if (move_dis < 0)//防止画面上升
 	{
@@ -403,38 +424,16 @@ void MoveDown()
 			}
 		}
 		FlushBatchDraw();
-		Sleep(sleeptime / 3);
+		Sleep(sleeptime);
 		cnt++;
 	}
-}
-
-//判断是否踩上跳板
-bool isOnBoard()
-{
-	int i;
-	for (i = 0; i < board_number; i++)
-	{
-		diff_x = position_x - board[i].x;
-		diff_y = position_y + player_height - board[i].y;
-		if (velocity_y >= 0 && diff_y >= 40 && diff_y <= 50 && diff_x >= -board_width / 2 && diff_x <= board_width / 2)
-		{
-			velocity_y = V;
-			if (board[i].type == spring)
-			{
-				velocity_y = V * 1.5;
-			}
-			jumped = 0;
-			velocity_x = 0;
-			return true;
-		}
-	}
-	return false;
 }
 
 //打印分数
 void PrintScore()
 {
 	settextstyle(20, 10, "Arial");
+	/*
 	outtextxy(WIDTH / 2 - 80 , 10, "Score:");
 	outtextxy(WIDTH / 2 - 80, 40, "Highest Score:");
 	char s1[10];
@@ -442,6 +441,15 @@ void PrintScore()
 	sprintf_s(s1, "%d", score_now);
 	outtextxy(WIDTH / 2 - 20, 10, s1);
 	sprintf_s(s2, "%d", score_pre);
+	outtextxy(WIDTH / 2 + 60, 40, s2);
+	*/
+	outtextxy(WIDTH / 2 - 80, 10, "highest:");
+	outtextxy(WIDTH / 2 - 80, 40, "lowest:");
+	char s1[10];
+	char s2[10];
+	sprintf_s(s1, "%d", highest);
+	outtextxy(WIDTH / 2 + 60, 10, s1);
+	sprintf_s(s2, "%d", lowest);
 	outtextxy(WIDTH / 2 + 60, 40, s2);
 }
 
@@ -515,10 +523,10 @@ void ShowRule()
 	outtextxy(WIDTH  / 3, HEIGHT / 2 + 20, "Press W for double jump.");
 	outtextxy(WIDTH  / 3, HEIGHT / 2 + 40, "If you drop, you will die.");
 	outtextxy(WIDTH / 3, HEIGHT / 2 + 60, "Have fun.");
-	MOUSEMSG m;
-	m = GetMouseMsg();
 	while (1) 
 	{
+		MOUSEMSG m;
+		m = GetMouseMsg();
 		if (m.uMsg == WM_LBUTTONDOWN)
 		{
 			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
@@ -543,7 +551,6 @@ void Ending()
 	outtextxy(WIDTH / 2 - 20, 250, s1);
 	sprintf_s(s2, "%d", score_pre);
 	outtextxy(WIDTH / 2 + 60, 280, s2);
-	
 	SaveInfo();                        //分数存档
 	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 5 / 8, &button_cover, NOTSRCERASE);
 	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 5 / 8, &playagain, SRCINVERT);
@@ -558,6 +565,7 @@ void Ending()
 			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 5 / 8 && m.y <= HEIGHT * 5 / 8 + button_height)
 			{
 				ch = '1';
+				
 				return;
 			}
 			//点击"exit"按钮
