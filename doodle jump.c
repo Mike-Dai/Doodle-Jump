@@ -24,7 +24,7 @@ const int board_height = 50; //跳板高度
 const int button_width = 130;
 const int button_height = 60;
 const int sleeptime = 8; //每次更新间隔时间
-const int board_number = 20; //跳板数量
+const int board_number = 200; //跳板数量
 
 //全局变量
 float position_x, position_y;
@@ -113,6 +113,7 @@ begin:
 		}
 		MoveBoard();
 		MovePlayer();
+		PutNewBoard();
 		if (isDrop())
 		{
 			break;
@@ -131,10 +132,9 @@ begin:
 }
 
 //函数定义
-
+//载入图片
 void LoadImg()
 {
-	//载入图片
 	loadimage(&background, "background1.jpg", WIDTH, HEIGHT);
 	loadimage(&menuback, "menuback.jpg", WIDTH, HEIGHT);
 	loadimage(&endback, "gameover.jpg", WIDTH, HEIGHT);
@@ -199,6 +199,33 @@ void Menu()
 	}
 }
 
+//显示规则
+void ShowRule()
+{
+	putimage(0, 0, &background);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
+	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &play, SRCINVERT);
+	settextstyle(20, 10, "Arial");
+	outtextxy(WIDTH / 3, HEIGHT * 2 / 5, "Tribute to Doodle Jump.");
+	outtextxy(WIDTH / 3, HEIGHT / 2, "Press A and D to move.");
+	outtextxy(WIDTH / 3, HEIGHT / 2 + 20, "Press W for double jump.");
+	outtextxy(WIDTH / 3, HEIGHT / 2 + 40, "If you drop, you will die.");
+	outtextxy(WIDTH / 3, HEIGHT / 2 + 60, "Have fun.");
+	while (1)
+	{
+		MOUSEMSG m;
+		m = GetMouseMsg();
+		if (m.uMsg == WM_LBUTTONDOWN)
+		{
+			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
+			{
+				break;
+			}
+		}
+	}
+	return;
+}
+
 //初始化
 void Startup()
 {
@@ -238,6 +265,26 @@ void MovePlayer()
 	case LEFT:
 		putimage(position_x, position_y, &left_cover, NOTSRCERASE); //遮罩图
 		putimage(position_x, position_y, &player_left, SRCINVERT); //原图
+		break;
+	}
+}
+
+//改变方向
+void ChangeDir()
+{
+	switch (ch)
+	{
+	case 'A':
+	case 'a':
+		velocity_x = -7;
+		state = LEFT;
+		break;
+	case 'D':
+	case 'd':
+		velocity_x = 7;
+		state = RIGHT;
+		break;
+	default:
 		break;
 	}
 }
@@ -380,7 +427,6 @@ void MoveDown()
 			highest = board[i].y;
 		}
 	}
-	PutNewBoard();
 	move_dis = lowest - (position_y + player_height); //下移距离为玩家与最下面跳板距离之差
 	if (move_dis < 0)//防止画面上升
 	{
@@ -433,7 +479,6 @@ void MoveDown()
 void PrintScore()
 {
 	settextstyle(20, 10, "Arial");
-	/*
 	outtextxy(WIDTH / 2 - 80 , 10, "Score:");
 	outtextxy(WIDTH / 2 - 80, 40, "Highest Score:");
 	char s1[10];
@@ -442,35 +487,24 @@ void PrintScore()
 	outtextxy(WIDTH / 2 - 20, 10, s1);
 	sprintf_s(s2, "%d", score_pre);
 	outtextxy(WIDTH / 2 + 60, 40, s2);
-	*/
-	outtextxy(WIDTH / 2 - 80, 10, "highest:");
-	outtextxy(WIDTH / 2 - 80, 40, "lowest:");
-	char s1[10];
-	char s2[10];
-	sprintf_s(s1, "%d", highest);
-	outtextxy(WIDTH / 2 + 60, 10, s1);
-	sprintf_s(s2, "%d", lowest);
-	outtextxy(WIDTH / 2 + 60, 40, s2);
 }
 
-//改变方向
-void ChangeDir()
+//二段跳
+void DoubleJump()
 {
-	switch (ch)
+	if (ch == 'w' && !jumped)
 	{
-	case 'A':
-	case 'a':
-		velocity_x = -7;
-		state = LEFT;
-		break;
-	case 'D':
-	case 'd':
-		velocity_x = 7;
-		state = RIGHT;
-		break;
-	default:
-		break;
+		velocity_y = V;
+		jumped = 1;//标记为已经跳过一次
 	}
+}
+
+//判断是否坠落
+bool isDrop()
+{
+	if (position_y > HEIGHT)//掉出屏幕底端
+		return true;
+	return false;
 }
 
 //游戏结束动画
@@ -501,41 +535,6 @@ void GameOver()
 		cnt++;
 		Sleep(sleeptime);
 	}
-}
-
-//判断是否坠落
-bool isDrop()
-{
-	if (position_y > HEIGHT)//掉出屏幕底端
-		return true;
-	return false;
-}
-
-//显示规则
-void ShowRule()
-{
-	putimage(0, 0, &background);
-	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &button_cover, NOTSRCERASE);
-	putimage(WIDTH / 2 - board_width / 2, HEIGHT * 3 / 4, &play, SRCINVERT);
-	settextstyle(20, 10, "Arial");
-	outtextxy(WIDTH  / 3, HEIGHT *2 / 5, "Tribute to Doodle Jump.");
-	outtextxy(WIDTH  / 3, HEIGHT / 2, "Press A and D to move.");
-	outtextxy(WIDTH  / 3, HEIGHT / 2 + 20, "Press W for double jump.");
-	outtextxy(WIDTH  / 3, HEIGHT / 2 + 40, "If you drop, you will die.");
-	outtextxy(WIDTH / 3, HEIGHT / 2 + 60, "Have fun.");
-	while (1) 
-	{
-		MOUSEMSG m;
-		m = GetMouseMsg();
-		if (m.uMsg == WM_LBUTTONDOWN)
-		{
-			if (m.x >= WIDTH / 2 - board_width / 2 && m.x <= WIDTH / 2 - board_width / 2 + button_width && m.y >= HEIGHT * 3 / 4 && m.y <= HEIGHT * 3 / 4 + button_height)
-			{
-				break;
-			}
-		}
-	}
-	return;
 }
 
 //结束界面
@@ -578,17 +577,6 @@ void Ending()
 				continue;
 			}
 		}
-	}
-	
-}
-
-//二段跳
-void DoubleJump()
-{
-	if (ch == 'w' && !jumped)
-	{
-		velocity_y = V;
-		jumped = 1;//标记为已经跳过一次
 	}
 }
 
